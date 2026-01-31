@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Anthropic from "https://esm.sh/@anthropic-ai/sdk@0.32.1";
+import { scryptAsync } from "https://esm.sh/@noble/hashes@1.3.3/scrypt";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -178,37 +179,76 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Decrypt API key (it's stored with embedded IV)
-    const encryptionKey = Deno.env.get("API_KEY_ENCRYPTION_KEY");
-    if (!encryptionKey) {
+    // Decrypt API key (embedded format: base64(IV + ciphertext + authTag))
+    const encryptionSecret = Deno.env.get("API_KEY_ENCRYPTION_SECRET");
+    if (!encryptionSecret || encryptionSecret.length < 32) {
+      console.error("API_KEY_ENCRYPTION_SECRET not configured or too short");
       return new Response(
         JSON.stringify({ error: "Server configuration error" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Parse the embedded format: base64(iv):base64(encrypted)
-    const [ivBase64, encryptedBase64] = profile.ai_key_anthropic.split(":");
-    const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
-    const encrypted = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+    // Decode the combined base64 string
+    const IV_LENGTH = 16;
+    const AUTH_TAG_LENGTH = 16;
+    const combined = Uint8Array.from(atob(profile.ai_key_anthropic), c => c.charCodeAt(0));
 
-    // Import the key
-    const keyData = Uint8Array.from(atob(encryptionKey), c => c.charCodeAt(0));
+    // Extract parts: IV (first 16 bytes), authTag (last 16 bytes), ciphertext (middle)
+    const iv = combined.slice(0, IV_LENGTH);
+    const authTag = combined.slice(-AUTH_TAG_LENGTH);
+    const ciphertext = combined.slice(IV_LENGTH, -AUTH_TAG_LENGTH);
+
+    // Combine ciphertext + authTag for AES-GCM (Web Crypto expects them together)
+    const encryptedWithTag = new Uint8Array(ciphertext.length + authTag.length);
+    encryptedWithTag.set(ciphertext, 0);
+    encryptedWithTag.set(authTag, ciphertext.length);
+
+    // Derive key using scrypt (matching Node.js implementation)
+    const SCRYPT_SALT = new TextEncoder().encode("novelworld-ai-key-encryption-v1");
+    const KEY_LENGTH = 32;
+    const derivedKey = await scryptAsync(
+      new TextEncoder().encode(encryptionSecret),
+      SCRYPT_SALT,
+      { N: 16384, r: 8, p: 1, dkLen: KEY_LENGTH }
+    );
+
+    // Import the derived key
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      keyData,
+      derivedKey,
       { name: "AES-GCM" },
       false,
       ["decrypt"]
     );
 
     // Decrypt
-    const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      cryptoKey,
-      encrypted
-    );
-    const apiKey = new TextDecoder().decode(decrypted);
+    let apiKey: string;
+    try {
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        cryptoKey,
+        encryptedWithTag
+      );
+      apiKey = new TextDecoder().decode(decrypted);
+    } catch (decryptError) {
+      console.error("Decryption failed, trying legacy key:", decryptError);
+      // Fall back to legacy key (raw bytes from secret)
+      const legacyKey = new TextEncoder().encode(encryptionSecret.slice(0, KEY_LENGTH));
+      const legacyCryptoKey = await crypto.subtle.importKey(
+        "raw",
+        legacyKey,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+      const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        legacyCryptoKey,
+        encryptedWithTag
+      );
+      apiKey = new TextDecoder().decode(decrypted);
+    }
 
     // Build context from project
     let contextStr = `# Project: ${project.title}\n\n`;
