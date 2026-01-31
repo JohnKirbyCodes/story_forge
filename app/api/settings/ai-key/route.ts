@@ -93,8 +93,10 @@ export async function POST(request: Request) {
     }
 
     // Validate key works with the provider
+    logger.info("Validating API key with provider", { provider });
     const isValid = await validateApiKey(provider, apiKey);
     if (!isValid) {
+      logger.warn("API key validation failed", { provider });
       return NextResponse.json(
         {
           error:
@@ -105,17 +107,42 @@ export async function POST(request: Request) {
     }
 
     // Encrypt the API key
-    // Use embedded format for per-provider columns (IV included in the value)
-    const embeddedEncrypted = encryptApiKeyEmbedded(apiKey);
-    // Use legacy format for backward compatibility columns
-    const { encrypted: legacyEncrypted, iv: legacyIv } = encryptApiKey(apiKey);
+    let embeddedEncrypted: string;
+    let legacyEncrypted: string;
+    let legacyIv: string;
+    try {
+      // Use embedded format for per-provider columns (IV included in the value)
+      embeddedEncrypted = encryptApiKeyEmbedded(apiKey);
+      // Use legacy format for backward compatibility columns
+      const legacyResult = encryptApiKey(apiKey);
+      legacyEncrypted = legacyResult.encrypted;
+      legacyIv = legacyResult.iv;
+    } catch (encryptError) {
+      const err = encryptError as Error;
+      logger.error("Encryption failed", {
+        errorName: err.name,
+        errorMessage: err.message,
+      });
+      throw encryptError;
+    }
 
     // Build provider-specific update
     const providerKeyColumn = `ai_key_${provider}` as const;
     const providerValidColumn = `ai_key_valid_${provider}` as const;
 
+    // Verify service role key is configured
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      logger.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     // Save to database using admin client
     const adminSupabase = createAdminClient();
+    logger.info("Saving API key to database", { provider, userId: user.id });
+
     const { error } = await adminSupabase
       .from("profiles")
       .update({
@@ -131,12 +158,25 @@ export async function POST(request: Request) {
       .eq("id", user.id);
 
     if (error) {
+      logger.error("Supabase error saving API key", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       throw error;
     }
 
     return NextResponse.json({ success: true, provider });
   } catch (error) {
-    logger.error("Failed to save API key", error);
+    const err = error as Error & { code?: string; details?: string; hint?: string };
+    logger.error("Failed to save API key", {
+      errorName: err.name,
+      errorMessage: err.message,
+      errorCode: err.code,
+      errorDetails: err.details,
+      errorHint: err.hint,
+    });
     return NextResponse.json(
       { error: "Failed to save API key" },
       { status: 500 }
