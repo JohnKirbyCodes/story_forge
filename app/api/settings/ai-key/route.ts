@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       legacyIv = legacyResult.iv;
     } catch (encryptError) {
       const err = encryptError as Error;
-      logger.error("Encryption failed", {
+      logger.error("Encryption failed", undefined, {
         errorName: err.name,
         errorMessage: err.message,
       });
@@ -158,7 +158,8 @@ export async function POST(request: Request) {
       .eq("id", user.id);
 
     if (error) {
-      logger.error("Supabase error saving API key", {
+      // Log as context (3rd param), not error object (2nd param) to avoid redaction
+      logger.error("Supabase error saving API key", undefined, {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -170,7 +171,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, provider });
   } catch (error) {
     const err = error as Error & { code?: string; details?: string; hint?: string };
-    logger.error("Failed to save API key", {
+    // Log as context (3rd param) to avoid redaction of non-Error objects
+    logger.error("Failed to save API key", undefined, {
       errorName: err.name,
       errorMessage: err.message,
       errorCode: err.code,

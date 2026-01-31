@@ -7,6 +7,11 @@ const MAX_NAME_LENGTH = 100;
 const MAX_GENRE_LENGTH = 50;
 const MAX_PROMPT_LENGTH = 10000;
 
+// UUID format regex - validates 8-4-4-4-12 hex format without strict RFC 4122 version/variant checks
+// This allows test UUIDs like "aaaabbbb-0001-aaaa-aaaa-aaaaaaaaaaaa" which Zod's built-in uuid() rejects
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uuidFormat = z.string().regex(UUID_REGEX, "Invalid UUID format");
+
 // Sanitize string by trimming and removing control characters
 const sanitizedString = z.string().transform((val) => {
   // Remove control characters except newlines and tabs
@@ -36,7 +41,7 @@ export const createBookSchema = z.object({
     .pipe(z.string().max(MAX_DESCRIPTION_LENGTH, `Description must be ${MAX_DESCRIPTION_LENGTH} characters or less`))
     .optional()
     .nullable(),
-  project_id: z.string().uuid("Invalid project ID"),
+  project_id: uuidFormat,
 });
 
 // Story node schemas
@@ -57,7 +62,7 @@ export const createStoryNodeSchema = z.object({
     .optional()
     .nullable(),
   node_type: storyNodeTypeSchema,
-  project_id: z.string().uuid("Invalid project ID"),
+  project_id: uuidFormat,
   position_x: z.number().min(-10000).max(10000).optional(),
   position_y: z.number().min(-10000).max(10000).optional(),
 });
@@ -66,14 +71,14 @@ export const createStoryNodeSchema = z.object({
 export const generateSceneSchema = z.object({
   prompt: sanitizedString
     .pipe(z.string().min(1, "Prompt is required").max(MAX_PROMPT_LENGTH, `Prompt must be ${MAX_PROMPT_LENGTH} characters or less`)),
-  sceneId: z.string().uuid("Invalid scene ID"),
-  projectId: z.string().uuid("Invalid project ID"),
+  sceneId: uuidFormat,
+  projectId: uuidFormat,
   model: z.string().max(100).optional(),
 });
 
 export const generateSynopsisSchema = z.object({
-  bookId: z.string().uuid("Invalid book ID"),
-  projectId: z.string().uuid("Invalid project ID"),
+  bookId: uuidFormat,
+  projectId: uuidFormat,
   existingContent: sanitizedString
     .pipe(z.string().max(50000))
     .optional()
@@ -82,8 +87,8 @@ export const generateSynopsisSchema = z.object({
 });
 
 export const generateOutlineSchema = z.object({
-  bookId: z.string().uuid("Invalid book ID"),
-  projectId: z.string().uuid("Invalid project ID"),
+  bookId: uuidFormat,
+  projectId: uuidFormat,
   synopsis: sanitizedString
     .pipe(z.string().max(50000))
     .optional()
@@ -92,8 +97,8 @@ export const generateOutlineSchema = z.object({
 });
 
 export const editProseSchema = z.object({
-  sceneId: z.string().uuid("Invalid scene ID"),
-  projectId: z.string().uuid("Invalid project ID"),
+  sceneId: uuidFormat,
+  projectId: uuidFormat,
   selectedText: sanitizedString
     .pipe(z.string().min(1, "Selected text is required").max(50000)),
   instruction: sanitizedString

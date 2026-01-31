@@ -2,33 +2,13 @@
 -- SEED DATA: THE OUTLAW TRAIL
 -- A complex western series spanning multiple books with rich character networks
 -- ============================================================================
+-- Production user: b780b8ca-1d6b-48fc-a639-9344846371e4 (kirbyjc1994@gmail.com)
+-- ============================================================================
 
--- Create a test user in auth.users (for local development only)
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at)
-VALUES (
-  '11111111-1111-1111-1111-111111111111',
-  'writer@outlawtrail.test',
-  crypt('testpassword123', gen_salt('bf')),
-  now(),
-  '{"full_name": "Samuel Hawthorne", "avatar_url": null}'::jsonb,
-  now(),
-  now()
-)
-ON CONFLICT (id) DO NOTHING;
-
--- Ensure profile exists
-INSERT INTO public.profiles (id, email, full_name, subscription_tier, words_quota, words_used_this_month)
-VALUES (
-  '11111111-1111-1111-1111-111111111111',
-  'writer@outlawtrail.test',
-  'Samuel Hawthorne',
-  'pro',
-  100000,
-  0
-)
-ON CONFLICT (id) DO UPDATE SET
-  subscription_tier = 'pro',
-  words_quota = 100000;
+-- Ensure user has pro tier to bypass book limits
+UPDATE public.profiles
+SET subscription_tier = 'pro'
+WHERE id = 'b780b8ca-1d6b-48fc-a639-9344846371e4';
 
 -- ============================================================================
 -- PROJECT: THE OUTLAW TRAIL SERIES
@@ -40,7 +20,7 @@ INSERT INTO public.projects (
   narrative_conventions, series_type, planned_books
 ) VALUES (
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  '11111111-1111-1111-1111-111111111111',
+  'b780b8ca-1d6b-48fc-a639-9344846371e4',
   'The Outlaw Trail',
   'An epic western saga following the McAllister gang through the dying days of the American frontier. Set against the backdrop of the 1890s, it explores themes of redemption, loyalty, and the collision between the old west and encroaching modernity.',
   'Western',
