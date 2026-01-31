@@ -33,6 +33,9 @@
 import { unstable_checkRateLimit as checkRateLimit } from "@vercel/firewall";
 import { logger } from "@/lib/logger";
 
+// Track which rate limit IDs have already logged "not found" to avoid log spam
+const notFoundLogged = new Set<string>();
+
 /**
  * Rate limit IDs - must match Vercel Dashboard configuration
  */
@@ -111,6 +114,11 @@ export async function checkApiRateLimit(
   rateLimitId: RateLimitId,
   options: RateLimitOptions
 ): Promise<RateLimitResult> {
+  // Skip rate limiting in development - only works on Vercel
+  if (process.env.NODE_ENV === "development") {
+    return { rateLimited: false };
+  }
+
   try {
     const result = await checkRateLimit(rateLimitId, {
       request: options.request,
@@ -124,16 +132,16 @@ export async function checkApiRateLimit(
       });
     }
 
-    if (result.error === "not-found") {
-      logger.error("Rate limit rule not found in Vercel Dashboard", null, {
-        rateLimitId,
-      });
+    // Only log "not-found" errors once per deployment to avoid log spam
+    // This can happen if Vercel Firewall rules are not yet configured
+    if (result.error === "not-found" && !notFoundLogged.has(rateLimitId)) {
+      notFoundLogged.add(rateLimitId);
+      logger.warn(`Rate limit rule '${rateLimitId}' not configured in Vercel Dashboard`);
     }
 
     return result;
   } catch (error) {
-    // Log error but don't block the request if rate limiting fails
-    logger.error("Rate limit check failed", error, { rateLimitId });
+    // Fail open - don't block requests if rate limiting fails
     return { rateLimited: false };
   }
 }
