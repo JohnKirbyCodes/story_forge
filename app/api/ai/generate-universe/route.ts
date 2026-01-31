@@ -295,9 +295,14 @@ Create meaningful relationships between the generated elements. Focus on:
     console.log("Project:", project.title);
     console.log("Provider:", provider);
     console.log("Model:", modelId);
-    console.log("Characters:", characterCount);
-    console.log("Locations:", locationCount);
-    console.log("Factions:", factionCount);
+    console.log("Requested counts:", {
+      characters: characterCount,
+      locations: locationCount,
+      factions: factionCount,
+      items: itemCount,
+      events: eventCount,
+      concepts: conceptCount,
+    });
     console.log("============================================\n");
 
     const startTime = Date.now();
