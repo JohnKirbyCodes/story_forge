@@ -162,6 +162,59 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Get user's subscription tier
+    const { data: userProfile } = await adminSupabase
+      .from("profiles")
+      .select("subscription_tier")
+      .eq("id", user.id)
+      .single();
+
+    const subscriptionTier = userProfile?.subscription_tier || "free";
+    const FREE_TIER_LIMIT = 15;
+
+    // Check current node count for tier limits (only for free tier)
+    if (subscriptionTier !== "pro") {
+      const { count: currentNodeCount } = await adminSupabase
+        .from("story_nodes")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", projectId);
+
+      const requestedCount = characterCount + locationCount + factionCount + itemCount + eventCount + conceptCount;
+      const remainingQuota = FREE_TIER_LIMIT - (currentNodeCount || 0);
+
+      console.log("Quota check:", { currentNodeCount, requestedCount, remainingQuota, tier: subscriptionTier });
+
+      if (remainingQuota <= 0) {
+        return new Response(
+          JSON.stringify({
+            error: "tier_limit",
+            message: "You've reached the free tier limit of 15 story elements per project.",
+            currentCount: currentNodeCount || 0,
+            limit: FREE_TIER_LIMIT,
+            requestedCount,
+            remainingQuota: 0,
+            upgradeUrl: "/dashboard/settings/billing",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (requestedCount > remainingQuota) {
+        return new Response(
+          JSON.stringify({
+            error: "tier_limit",
+            message: `You can only generate ${remainingQuota} more elements. Reduce the count or upgrade to Pro for unlimited elements.`,
+            currentCount: currentNodeCount || 0,
+            limit: FREE_TIER_LIMIT,
+            requestedCount,
+            remainingQuota,
+            upgradeUrl: "/dashboard/settings/billing",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Get user's API key
     const { data: profile } = await adminSupabase
       .from("profiles")
@@ -378,7 +431,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert character:", char.name, error);
+      } else if (node) {
         nodeNameToId[char.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: char.name, node_type: "character" });
       }
@@ -403,7 +458,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert location:", loc.name, error);
+      } else if (node) {
         nodeNameToId[loc.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: loc.name, node_type: "location" });
       }
@@ -427,7 +484,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert faction:", faction.name, error);
+      } else if (node) {
         nodeNameToId[faction.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: faction.name, node_type: "faction" });
       }
@@ -451,7 +510,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert item:", item.name, error);
+      } else if (node) {
         nodeNameToId[item.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: item.name, node_type: "item" });
       }
@@ -476,7 +537,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert event:", event.name, error);
+      } else if (node) {
         nodeNameToId[event.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: event.name, node_type: "event" });
       }
@@ -500,7 +563,9 @@ Respond with valid JSON matching this exact structure:
         .select()
         .single();
 
-      if (!error && node) {
+      if (error) {
+        console.error("Failed to insert concept:", concept.name, error);
+      } else if (node) {
         nodeNameToId[concept.name.toLowerCase()] = node.id;
         insertedNodes.push({ id: node.id, name: concept.name, node_type: "concept" });
       }
