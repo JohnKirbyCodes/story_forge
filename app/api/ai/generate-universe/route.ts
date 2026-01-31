@@ -302,14 +302,22 @@ Create meaningful relationships between the generated elements. Focus on:
 
     const startTime = Date.now();
 
-    const result = await generateObject({
-      model: instance.getModel(modelId),
-      schema: universeSchema,
-      system: systemPrompt,
-      prompt: `Generate a complete story universe for "${project.title}". Create compelling, interconnected elements that support the genre, themes, and setting. Ensure characters have clear roles, locations are vivid, and relationships create potential for conflict and drama.`,
-    });
+    let result;
+    try {
+      result = await generateObject({
+        model: instance.getModel(modelId),
+        schema: universeSchema,
+        system: systemPrompt,
+        prompt: `Generate a complete story universe for "${project.title}". Create compelling, interconnected elements that support the genre, themes, and setting. Ensure characters have clear roles, locations are vivid, and relationships create potential for conflict and drama.`,
+      });
+    } catch (genError) {
+      console.error("generateObject error:", genError);
+      throw genError;
+    }
 
     const durationMs = Date.now() - startTime;
+    console.log("generateObject result type:", typeof result);
+    console.log("generateObject has object:", !!result?.object);
     const { inputTokens, outputTokens } = extractUsageFromResult(result);
 
     // Track AI usage
@@ -328,14 +336,26 @@ Create meaningful relationships between the generated elements. Focus on:
 
     const generated = result.object;
 
+    // Debug: log what was generated
+    console.log("Generated object keys:", Object.keys(generated || {}));
+    console.log("Generated counts:", {
+      characters: generated?.characters?.length || 0,
+      locations: generated?.locations?.length || 0,
+      factions: generated?.factions?.length || 0,
+      items: generated?.items?.length || 0,
+      events: generated?.events?.length || 0,
+      concepts: generated?.concepts?.length || 0,
+      relationships: generated?.relationships?.length || 0,
+    });
+
     // Calculate positions for all nodes
     const nodesByType = {
-      character: generated.characters.length,
-      location: generated.locations.length,
-      faction: generated.factions.length,
-      item: generated.items.length,
-      event: generated.events.length,
-      concept: generated.concepts.length,
+      character: generated.characters?.length || 0,
+      location: generated.locations?.length || 0,
+      faction: generated.factions?.length || 0,
+      item: generated.items?.length || 0,
+      event: generated.events?.length || 0,
+      concept: generated.concepts?.length || 0,
     };
     const positions = calculateNodePositions(nodesByType);
 
