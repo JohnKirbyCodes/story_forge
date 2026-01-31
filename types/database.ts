@@ -5,7 +5,6 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
 export type Database = {
   graphql_public: {
     Tables: {
@@ -312,54 +311,123 @@ export type Database = {
       }
       profiles: {
         Row: {
+          ai_api_key_encrypted: string | null
+          ai_api_key_iv: string | null
+          ai_api_key_valid: boolean | null
+          ai_default_model: string | null
+          ai_key_anthropic: string | null
+          ai_key_google: string | null
+          ai_key_openai: string | null
+          ai_key_valid_anthropic: boolean | null
+          ai_key_valid_google: boolean | null
+          ai_key_valid_openai: boolean | null
+          ai_model_edit: string | null
+          ai_model_outline: string | null
+          ai_model_scene: string | null
+          ai_model_synopsis: string | null
+          ai_model_universe: string | null
+          ai_provider: string | null
           avatar_url: string | null
+          billing_cycle: string | null
           billing_period_end: string | null
           billing_period_start: string | null
           created_at: string
           email: string
           full_name: string | null
           id: string
+          onboarding_banner_dismissed: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_completed_at: string | null
+          onboarding_current_step: string | null
+          onboarding_skipped_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_period_end: string | null
           subscription_status: string | null
           subscription_tier: string | null
+          tooltips_dismissed: string[] | null
           updated_at: string
           words_generated_this_month: number | null
           words_quota: number | null
           words_used_this_month: number | null
         }
         Insert: {
+          ai_api_key_encrypted?: string | null
+          ai_api_key_iv?: string | null
+          ai_api_key_valid?: boolean | null
+          ai_default_model?: string | null
+          ai_key_anthropic?: string | null
+          ai_key_google?: string | null
+          ai_key_openai?: string | null
+          ai_key_valid_anthropic?: boolean | null
+          ai_key_valid_google?: boolean | null
+          ai_key_valid_openai?: boolean | null
+          ai_model_edit?: string | null
+          ai_model_outline?: string | null
+          ai_model_scene?: string | null
+          ai_model_synopsis?: string | null
+          ai_model_universe?: string | null
+          ai_provider?: string | null
           avatar_url?: string | null
+          billing_cycle?: string | null
           billing_period_end?: string | null
           billing_period_start?: string | null
           created_at?: string
           email: string
           full_name?: string | null
           id: string
+          onboarding_banner_dismissed?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
+          onboarding_current_step?: string | null
+          onboarding_skipped_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          tooltips_dismissed?: string[] | null
           updated_at?: string
           words_generated_this_month?: number | null
           words_quota?: number | null
           words_used_this_month?: number | null
         }
         Update: {
+          ai_api_key_encrypted?: string | null
+          ai_api_key_iv?: string | null
+          ai_api_key_valid?: boolean | null
+          ai_default_model?: string | null
+          ai_key_anthropic?: string | null
+          ai_key_google?: string | null
+          ai_key_openai?: string | null
+          ai_key_valid_anthropic?: boolean | null
+          ai_key_valid_google?: boolean | null
+          ai_key_valid_openai?: boolean | null
+          ai_model_edit?: string | null
+          ai_model_outline?: string | null
+          ai_model_scene?: string | null
+          ai_model_synopsis?: string | null
+          ai_model_universe?: string | null
+          ai_provider?: string | null
           avatar_url?: string | null
+          billing_cycle?: string | null
           billing_period_end?: string | null
           billing_period_start?: string | null
           created_at?: string
           email?: string
           full_name?: string | null
           id?: string
+          onboarding_banner_dismissed?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_completed_at?: string | null
+          onboarding_current_step?: string | null
+          onboarding_skipped_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_period_end?: string | null
           subscription_status?: string | null
           subscription_tier?: string | null
+          tooltips_dismissed?: string[] | null
           updated_at?: string
           words_generated_this_month?: number | null
           words_quota?: number | null
@@ -900,11 +968,8 @@ export type Database = {
     }
   }
 }
-
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -933,7 +998,6 @@ export type Tables<
       ? R
       : never
     : never
-
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -958,7 +1022,6 @@ export type TablesInsert<
       ? I
       : never
     : never
-
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -983,7 +1046,6 @@ export type TablesUpdate<
       ? U
       : never
     : never
-
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -1000,7 +1062,6 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
-
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -1017,7 +1078,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
 export const Constants = {
   graphql_public: {
     Enums: {},

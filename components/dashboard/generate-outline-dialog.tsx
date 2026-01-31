@@ -31,13 +31,23 @@ import {
   BookOpen,
   FileText,
   ChevronRight,
+  Users,
+  MapPin,
+  Eye,
 } from "lucide-react";
+import { ModelSelector } from "@/components/shared/model-selector";
+import { AIProvider } from "@/lib/ai/providers/config";
+import { toast } from "sonner";
 
 interface GeneratedScene {
   title?: string;
   beat_instructions: string;
   mood?: string;
   tension_level?: string;
+  // Node references for auto-linking
+  characters?: string[];
+  pov_character?: string;
+  location?: string;
 }
 
 interface GeneratedChapter {
@@ -46,14 +56,23 @@ interface GeneratedChapter {
   scenes: GeneratedScene[];
 }
 
+interface NodeMappingEntry {
+  id: string;
+  type: string;
+}
+
 interface GeneratedOutline {
   chapters: GeneratedChapter[];
+  nodeMapping?: Record<string, NodeMappingEntry>;
 }
 
 interface GenerateOutlineDialogProps {
   bookId: string;
   projectId: string;
   book: Book;
+  validProviders: AIProvider[];
+  aiDefaultModel: string;
+  hasValidKey: boolean;
 }
 
 type Step = "configure" | "generating" | "preview" | "saving" | "complete";
@@ -62,6 +81,9 @@ export function GenerateOutlineDialog({
   bookId,
   projectId,
   book,
+  validProviders,
+  aiDefaultModel,
+  hasValidKey,
 }: GenerateOutlineDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("configure");
@@ -70,6 +92,7 @@ export function GenerateOutlineDialog({
   const [outline, setOutline] = useState<GeneratedOutline | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
+  const [selectedModel, setSelectedModel] = useState(aiDefaultModel);
   const router = useRouter();
   const supabase = createClient();
 
@@ -88,11 +111,17 @@ export function GenerateOutlineDialog({
           projectId,
           chapterCount: parseInt(chapterCount),
           scenesPerChapter: parseInt(scenesPerChapter),
+          model: selectedModel,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to generate outline");
+        // Parse error response for better error messages
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error === "provider_error") {
+          throw new Error(errorData.message || "AI provider error. Please check your API key in Settings.");
+        }
+        throw new Error(errorData.error || "Failed to generate outline");
       }
 
       const data = await response.json();
@@ -104,6 +133,18 @@ export function GenerateOutlineDialog({
     }
   };
 
+  // Helper to resolve node name to ID using the mapping
+  const resolveNodeId = (
+    name: string | undefined,
+    expectedType?: string
+  ): string | null => {
+    if (!name || !outline?.nodeMapping) return null;
+    const entry = outline.nodeMapping[name.toLowerCase()];
+    if (!entry) return null;
+    if (expectedType && entry.type !== expectedType) return null;
+    return entry.id;
+  };
+
   const handleSave = async () => {
     if (!outline) return;
 
@@ -113,6 +154,10 @@ export function GenerateOutlineDialog({
       outline.chapters.length +
       outline.chapters.reduce((acc, ch) => acc + ch.scenes.length, 0);
     setSaveProgress({ current: 0, total: totalItems });
+
+    // Track linking issues for user feedback
+    let failedCharacterLinks = 0;
+    let unresolvedNodes = 0;
 
     try {
       let progress = 0;
@@ -146,21 +191,92 @@ export function GenerateOutlineDialog({
           let tensionLevel = scene.tension_level || null;
           if (tensionLevel === "climactic") tensionLevel = "peak";
 
-          const { error: sceneError } = await supabase.from("scenes").insert({
-            chapter_id: newChapter.id,
-            title: scene.title || null,
-            beat_instructions: scene.beat_instructions,
-            mood: scene.mood || null,
-            tension_level: tensionLevel,
-            order_index: j,
-            sort_order: j,
-          });
+          // Resolve location and POV character IDs
+          const locationId = resolveNodeId(scene.location, "location");
+          const povCharacterId = resolveNodeId(scene.pov_character, "character");
+
+          // Track unresolved nodes
+          if (scene.location && !locationId) unresolvedNodes++;
+          if (scene.pov_character && !povCharacterId) unresolvedNodes++;
+
+          const { data: newScene, error: sceneError } = await supabase
+            .from("scenes")
+            .insert({
+              chapter_id: newChapter.id,
+              title: scene.title || null,
+              beat_instructions: scene.beat_instructions,
+              mood: scene.mood || null,
+              tension_level: tensionLevel,
+              order_index: j,
+              sort_order: j,
+              location_id: locationId,
+              pov_character_id: povCharacterId,
+            })
+            .select()
+            .single();
 
           if (sceneError) throw sceneError;
+
+          // Build characters list, ensuring POV character is included
+          let charactersToLink = scene.characters || [];
+          if (scene.pov_character) {
+            const povLower = scene.pov_character.toLowerCase();
+            const hasPov = charactersToLink.some(
+              (c) => c.toLowerCase() === povLower
+            );
+            if (!hasPov) {
+              charactersToLink = [...charactersToLink, scene.pov_character];
+            }
+          }
+
+          // Create scene_characters entries for all characters in this scene
+          if (newScene && charactersToLink.length > 0) {
+            const sceneCharacters = charactersToLink
+              .map((charName) => {
+                const charId = resolveNodeId(charName, "character");
+                if (!charId) {
+                  unresolvedNodes++;
+                  return null;
+                }
+                return {
+                  scene_id: newScene.id,
+                  character_id: charId,
+                  node_id: charId,
+                  pov: charName.toLowerCase() === scene.pov_character?.toLowerCase(),
+                  role_in_scene: "major" as const,
+                };
+              })
+              .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+            if (sceneCharacters.length > 0) {
+              const { error: charError } = await supabase
+                .from("scene_characters")
+                .insert(sceneCharacters);
+
+              if (charError) {
+                console.error("Error inserting scene characters:", charError);
+                failedCharacterLinks += sceneCharacters.length;
+              }
+            }
+          }
 
           progress++;
           setSaveProgress({ current: progress, total: totalItems });
         }
+      }
+
+      // Show warning if there were linking issues
+      if (failedCharacterLinks > 0 || unresolvedNodes > 0) {
+        const issues: string[] = [];
+        if (unresolvedNodes > 0) {
+          issues.push(`${unresolvedNodes} node(s) could not be matched`);
+        }
+        if (failedCharacterLinks > 0) {
+          issues.push(`${failedCharacterLinks} character link(s) failed to save`);
+        }
+        toast.warning("Outline saved with warnings", {
+          description: issues.join(". ") + ". You can manually link them in scene settings.",
+        });
       }
 
       setStep("complete");
@@ -267,6 +383,18 @@ export function GenerateOutlineDialog({
                 </div>
               </div>
 
+              {/* Model Selection */}
+              {hasValidKey && (
+                <div className="space-y-2">
+                  <Label>AI Model</Label>
+                  <ModelSelector
+                    provider={validProviders}
+                    value={selectedModel}
+                    onChange={setSelectedModel}
+                  />
+                </div>
+              )}
+
               {/* Context summary */}
               <div className="rounded-lg border p-4 space-y-3">
                 <p className="text-sm font-medium">Context being used:</p>
@@ -312,7 +440,11 @@ export function GenerateOutlineDialog({
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleGenerate}>
+              <Button
+                onClick={handleGenerate}
+                disabled={!hasValidKey}
+                title={!hasValidKey ? "Configure your API key in Settings" : undefined}
+              >
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate Outline
               </Button>
@@ -398,6 +530,29 @@ export function GenerateOutlineDialog({
                               <p className="text-sm text-muted-foreground pl-5">
                                 {scene.beat_instructions}
                               </p>
+                              {/* Show linked nodes */}
+                              {(scene.characters?.length || scene.location || scene.pov_character) && (
+                                <div className="flex items-center gap-3 pl-5 pt-1 flex-wrap">
+                                  {scene.location && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <MapPin className="h-3 w-3" />
+                                      <span>{scene.location}</span>
+                                    </div>
+                                  )}
+                                  {scene.pov_character && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Eye className="h-3 w-3" />
+                                      <span>POV: {scene.pov_character}</span>
+                                    </div>
+                                  )}
+                                  {scene.characters && scene.characters.length > 0 && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Users className="h-3 w-3" />
+                                      <span>{scene.characters.join(", ")}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>

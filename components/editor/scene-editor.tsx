@@ -17,6 +17,8 @@ import { useTextSelection } from "@/hooks/use-text-selection";
 import { SelectionToolbar } from "@/components/dashboard/selection-toolbar";
 import { FloatingEditPreview } from "@/components/dashboard/edit-preview";
 import { EditAction } from "@/lib/ai/edit-prompts";
+import { ModelSelector } from "@/components/shared/model-selector";
+import { AIProvider } from "@/lib/ai/providers/config";
 
 interface SceneCharacterWithNode extends SceneCharacter {
   story_nodes?: StoryNode;
@@ -27,6 +29,10 @@ interface SceneEditorProps {
   projectId: string;
   storyNodes: StoryNode[];
   sceneCharacters: SceneCharacterWithNode[];
+  validProviders: AIProvider[];
+  aiSceneModel: string;
+  aiEditModel: string;
+  hasValidKey: boolean;
 }
 
 interface EditState {
@@ -41,6 +47,10 @@ export function SceneEditor({
   projectId,
   storyNodes,
   sceneCharacters,
+  validProviders,
+  aiSceneModel,
+  aiEditModel,
+  hasValidKey,
 }: SceneEditorProps) {
   const [beatInstructions, setBeatInstructions] = useState(
     scene.beat_instructions || ""
@@ -50,6 +60,8 @@ export function SceneEditor({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [linkedNodes, setLinkedNodes] = useState<SceneCharacterWithNode[]>(sceneCharacters);
   const [editState, setEditState] = useState<EditState | null>(null);
+  const [selectedSceneModel, setSelectedSceneModel] = useState(aiSceneModel);
+  const [selectedEditModel, setSelectedEditModel] = useState(aiEditModel);
   const proseContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -70,6 +82,9 @@ export function SceneEditor({
   } = useCompletion({
     api: "/api/ai/edit-prose",
     streamProtocol: "text",
+    body: {
+      model: selectedEditModel,
+    },
     onFinish: (_prompt, completionText) => {
       console.log("Edit generation complete:", completionText.length, "chars");
     },
@@ -150,6 +165,7 @@ export function SceneEditor({
     body: {
       sceneId: scene.id,
       projectId,
+      model: selectedSceneModel,
     },
     onFinish: (_prompt, completionText) => {
       setProse(completionText);
@@ -296,18 +312,30 @@ export function SceneEditor({
           <div className="flex h-full flex-col border-r">
             <div className="flex items-center justify-between border-b px-4 py-2">
               <h2 className="font-semibold">Beat Instructions</h2>
-              <Button
-                size="sm"
-                onClick={handleGenerateProse}
-                disabled={isGenerating || !beatInstructions.trim()}
-              >
-                {isGenerating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
+              <div className="flex items-center gap-2">
+                {hasValidKey && (
+                  <ModelSelector
+                    provider={validProviders}
+                    value={selectedSceneModel}
+                    onChange={setSelectedSceneModel}
+                    disabled={isGenerating}
+                    compact
+                  />
                 )}
-                Generate
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={handleGenerateProse}
+                  disabled={isGenerating || !beatInstructions.trim() || !hasValidKey}
+                  title={!hasValidKey ? "Configure your API key in Settings" : undefined}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                  )}
+                  Generate
+                </Button>
+              </div>
             </div>
             <ScrollArea className="flex-1 p-4">
               <Textarea

@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -12,7 +11,9 @@ import {
 import { trackAIUsage } from "@/lib/ai/usage-tracker";
 import { buildGraphContext, getFocusNodeIds } from "@/lib/ai/graph-context";
 import { GraphContext } from "@/types/graph-context";
-import { checkWordQuota, incrementWordUsage, countWords } from "@/lib/subscription/limits";
+import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
+import { isValidModel } from "@/lib/ai/providers/config";
+import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export const maxDuration = 60;
 
@@ -22,18 +23,13 @@ interface EditProseRequest {
   customPrompt?: string;
   sceneId: string;
   projectId: string;
+  model?: string;
 }
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response("API key not configured", { status: 500 });
-    }
-
-    const anthropic = createAnthropic({ apiKey });
     const body: EditProseRequest = await request.json();
-    const { selectedText, action, customPrompt, sceneId, projectId } = body;
+    const { selectedText, action, customPrompt, sceneId, projectId, model: requestedModel } = body;
 
     if (!selectedText || !action || !sceneId || !projectId) {
       return new Response("Missing required fields", { status: 400 });
@@ -49,8 +45,43 @@ export async function POST(request: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
+    // Apply rate limiting (per-minute and per-hour limits)
+    const rateLimitResult = await checkMultipleRateLimits(request, [
+      { id: RATE_LIMIT_IDS.AI_GENERATE, key: user.id },
+      { id: RATE_LIMIT_IDS.AI_GENERATE_HOURLY, key: user.id },
+    ]);
+    if (rateLimitResult.rateLimited) {
+      return createRateLimitResponse();
+    }
+
     // Use admin client to verify ownership
     const adminSupabase = createAdminClient();
+
+    // Get user's configured AI provider (BYOK) - pass requested model for provider detection
+    let providerResult;
+    try {
+      providerResult = await getUserProvider(adminSupabase, user.id, requestedModel);
+    } catch (err) {
+      if (err instanceof ProviderError) {
+        return new Response(
+          JSON.stringify({
+            error: "provider_error",
+            code: err.code,
+            message: err.message,
+            provider: err.provider,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      throw err;
+    }
+
+    const { instance, provider, defaultModelId } = providerResult;
+
+    // Use requested model if valid, otherwise fall back to default
+    const modelId = (requestedModel && isValidModel(provider, requestedModel))
+      ? requestedModel
+      : defaultModelId;
 
     // Verify user owns this project
     const { data: project, error: projectError } = await adminSupabase
@@ -96,21 +127,6 @@ export async function POST(request: Request) {
       });
     }
 
-    // Check word quota before generating
-    const quotaStatus = await checkWordQuota(adminSupabase, user.id);
-    if (!quotaStatus.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: "quota_exceeded",
-          message: "You've reached your monthly AI generation limit. Upgrade to Pro for more words.",
-          used: quotaStatus.used,
-          limit: quotaStatus.limit,
-          tier: quotaStatus.tier,
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
     const bookId = chapters.book_id;
     const chapterId = chapters.id;
 
@@ -143,6 +159,8 @@ export async function POST(request: Request) {
     // Log for debugging
     console.log("\n========== AI EDIT REQUEST ==========");
     console.log("Action:", action);
+    console.log("Provider:", provider);
+    console.log("Model:", modelId);
     console.log("Scene ID:", sceneId);
     console.log("Text length:", selectedText.length, "characters");
     console.log("Using graph context:", !!graphContext);
@@ -156,32 +174,26 @@ export async function POST(request: Request) {
     }
     console.log("==========================================\n");
 
-    const modelId = "claude-sonnet-4-20250514";
     const startTime = Date.now();
 
     const result = streamText({
-      model: anthropic(modelId),
+      model: instance.getModel(modelId),
       system: systemPrompt,
       prompt: userPrompt,
       onFinish: async ({ text, usage }) => {
         const durationMs = Date.now() - startTime;
-        // AI SDK v6 uses these property names on LanguageModelUsage
-        const inputTokens = (usage as { promptTokens?: number })?.promptTokens ?? 0;
-        const outputTokens = (usage as { completionTokens?: number })?.completionTokens ?? 0;
+        // AI SDK v4 uses inputTokens/outputTokens on LanguageModelUsage
+        const inputTokens = (usage as { inputTokens?: number })?.inputTokens ?? 0;
+        const outputTokens = (usage as { outputTokens?: number })?.outputTokens ?? 0;
 
-        // Count words in generated text and increment usage
-        const wordCount = countWords(text);
-        await incrementWordUsage(adminSupabase, user.id, wordCount);
-        console.log(`Word usage (${action}): +${wordCount} words (AI generated)`);
-
-        // Track AI usage
+        // Track AI usage (no word quota - BYOK model)
         trackAIUsage({
           userId: user.id,
           projectId,
           bookId,
           sceneId,
           endpoint: `edit-prose:${action}`,
-          model: modelId,
+          model: `${provider}:${modelId}`,
           inputTokens,
           outputTokens,
           durationMs,
@@ -195,6 +207,14 @@ export async function POST(request: Request) {
     return result.toTextStreamResponse();
   } catch (error) {
     console.error("Error editing prose:", error);
-    return new Response("Internal Server Error", { status: 500 });
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({
+        error: "generation_error",
+        message: errorMessage,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

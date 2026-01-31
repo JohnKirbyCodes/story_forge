@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { BillingCycle } from "@/lib/subscription/config";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    // Parse request body for billing cycle
+    const body = await request.json().catch(() => ({}));
+    const billingCycle: BillingCycle = body.billingCycle === "annual" ? "annual" : "monthly";
+
     // Get authenticated user
     const supabase = await createClient();
     const {
@@ -12,6 +18,15 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit checkout requests to prevent fraud
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.STRIPE_CHECKOUT, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
 
     // Get user profile
@@ -40,6 +55,11 @@ export async function POST() {
         .eq("id", user.id);
     }
 
+    // Select price ID based on billing cycle
+    const priceId = billingCycle === "annual"
+      ? process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID!
+      : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!;
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -47,7 +67,7 @@ export async function POST() {
       payment_method_types: ["card"],
       line_items: [
         {
-          price: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID!,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -56,6 +76,7 @@ export async function POST() {
       subscription_data: {
         metadata: {
           supabase_user_id: user.id,
+          billing_cycle: billingCycle,
         },
       },
     });

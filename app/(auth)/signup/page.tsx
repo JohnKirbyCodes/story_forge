@@ -139,7 +139,7 @@ export default function SignupPage() {
           </div>
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
           <CardDescription>
-            Start writing your story with StoryForge AI
+            Start writing your story with NovelWorld AI
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

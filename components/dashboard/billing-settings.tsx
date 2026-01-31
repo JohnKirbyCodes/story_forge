@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Profile } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Check, Loader2, Sparkles, Crown } from "lucide-react";
-import { SUBSCRIPTION_TIERS, formatLimit } from "@/lib/subscription/config";
+import { Check, Loader2, Sparkles, Crown, Key, Calendar, Zap } from "lucide-react";
+import { SUBSCRIPTION_TIERS, formatLimit, getProPricing, BillingCycle } from "@/lib/subscription/config";
+import { cn } from "@/lib/utils";
 
 interface BillingSettingsProps {
   profile: Profile | null;
@@ -24,21 +25,23 @@ interface BillingSettingsProps {
 export function BillingSettings({ profile }: BillingSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>("annual");
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const canceled = searchParams.get("canceled");
 
   const isPro = profile?.subscription_tier === "pro";
-  const tierLimits = isPro ? SUBSCRIPTION_TIERS.pro : SUBSCRIPTION_TIERS.free;
-  const wordsUsed = profile?.words_used_this_month || 0;
-  const wordLimit = tierLimits.monthlyWordQuota || Infinity;
-  const wordProgress = wordLimit === Infinity ? 0 : (wordsUsed / wordLimit) * 100;
+  const hasApiKey = profile?.ai_api_key_valid === true;
+  const currentBillingCycle = (profile?.billing_cycle as BillingCycle) || "monthly";
+  const pricing = getProPricing();
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (cycle: BillingCycle) => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ billingCycle: cycle }),
       });
       const data = await response.json();
       if (data.url) {
@@ -91,6 +94,30 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
         </Card>
       )}
 
+      {/* API Key Status Alert */}
+      {!hasApiKey && (
+        <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Key className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-blue-700 dark:text-blue-300 font-medium">
+                  AI API Key Required
+                </p>
+                <p className="text-sm text-blue-600 dark:text-blue-400">
+                  Configure your own API key to use AI features (Anthropic, OpenAI, or Google).
+                </p>
+              </div>
+            </div>
+            <Link href="/dashboard/settings/ai">
+              <Button variant="outline" size="sm">
+                Configure
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Current Plan */}
       <Card>
         <CardHeader>
@@ -102,32 +129,50 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
               </CardTitle>
               <CardDescription>
                 {isPro
-                  ? "You have access to all Pro features"
+                  ? `You have access to all Pro features (${currentBillingCycle === "annual" ? "Annual" : "Monthly"} billing)`
                   : "Upgrade to unlock unlimited features"}
               </CardDescription>
             </div>
-            <Badge variant={isPro ? "default" : "secondary"} className="text-lg px-4 py-1">
-              {isPro ? "Pro" : "Free"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isPro && (
+                <Badge variant="outline" className="text-xs">
+                  <Calendar className="mr-1 h-3 w-3" />
+                  {currentBillingCycle === "annual" ? "Yearly" : "Monthly"}
+                </Badge>
+              )}
+              <Badge variant={isPro ? "default" : "secondary"} className="text-lg px-4 py-1">
+                {isPro ? "Pro" : "Free"}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Word Usage */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">AI Words Generated This Month</span>
-              <span>
-                {wordsUsed.toLocaleString()} / {formatLimit(tierLimits.monthlyWordQuota)}
+          {/* Current limits display */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Projects:</span>{" "}
+              <span className="font-medium">
+                {formatLimit(isPro ? SUBSCRIPTION_TIERS.pro.maxProjects : SUBSCRIPTION_TIERS.free.maxProjects)}
               </span>
             </div>
-            {tierLimits.monthlyWordQuota && (
-              <Progress value={wordProgress} className="h-2" />
-            )}
-            {wordProgress >= 100 && (
-              <p className="text-sm text-destructive">
-                You&apos;ve reached your monthly limit. {!isPro && "Upgrade to Pro for more words."}
-              </p>
-            )}
+            <div>
+              <span className="text-muted-foreground">Books per project:</span>{" "}
+              <span className="font-medium">
+                {formatLimit(isPro ? SUBSCRIPTION_TIERS.pro.maxBooksPerProject : SUBSCRIPTION_TIERS.free.maxBooksPerProject)}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Story elements:</span>{" "}
+              <span className="font-medium">
+                {formatLimit(isPro ? SUBSCRIPTION_TIERS.pro.maxStoryNodes : SUBSCRIPTION_TIERS.free.maxStoryNodes)}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">AI Provider:</span>{" "}
+              <span className="font-medium">
+                {hasApiKey ? (profile?.ai_provider || "Configured") : "Not configured"}
+              </span>
+            </div>
           </div>
         </CardContent>
         <CardFooter>
@@ -142,110 +187,212 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
               )}
               Manage Billing
             </Button>
-          ) : (
-            <Button onClick={handleUpgrade} disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Upgrade to Pro - $15/month
-            </Button>
-          )}
+          ) : null}
         </CardFooter>
       </Card>
 
-      {/* Plan Comparison */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Free Plan */}
-        <Card className={!isPro ? "border-primary" : ""}>
-          <CardHeader>
-            <CardTitle>Free</CardTitle>
-            <CardDescription>For getting started</CardDescription>
-            <p className="text-3xl font-bold">$0</p>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.free.maxProjects)} project
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.free.maxBooksPerProject)} book per project
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.free.maxStoryNodes)} story elements
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.free.monthlyWordQuota)} AI words/month
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                TXT export
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Pro Plan */}
-        <Card className={isPro ? "border-primary" : ""}>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle>Pro</CardTitle>
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
-                Popular
-              </Badge>
-            </div>
-            <CardDescription>For serious writers</CardDescription>
-            <p className="text-3xl font-bold">
-              $15<span className="text-base font-normal text-muted-foreground">/month</span>
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.pro.maxProjects)} projects
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.pro.maxBooksPerProject)} books
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.pro.maxStoryNodes)} story elements
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                {formatLimit(SUBSCRIPTION_TIERS.pro.monthlyWordQuota)} AI words/month
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                TXT export
-              </li>
-              <li className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-green-500" />
-                Priority support
-              </li>
-            </ul>
-          </CardContent>
-          <CardFooter>
-            {!isPro && (
-              <Button className="w-full" onClick={handleUpgrade} disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
+      {/* Upgrade Section - Only show for free users */}
+      {!isPro && (
+        <>
+          {/* Billing Cycle Toggle */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center rounded-lg border bg-muted p-1">
+              <button
+                onClick={() => setSelectedCycle("monthly")}
+                className={cn(
+                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  selectedCycle === "monthly"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
-                Upgrade Now
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setSelectedCycle("annual")}
+                className={cn(
+                  "rounded-md px-4 py-2 text-sm font-medium transition-colors relative",
+                  selectedCycle === "annual"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Annual
+                <Badge className="absolute -top-2 -right-2 bg-green-500 text-[10px] px-1.5 py-0.5">
+                  Save ${pricing.annualSavings}
+                </Badge>
+              </button>
+            </div>
+          </div>
+
+          {/* Plan Comparison */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Free Plan */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Free</CardTitle>
+                <CardDescription>For getting started</CardDescription>
+                <p className="text-3xl font-bold">$0</p>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.free.maxProjects)} project
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.free.maxBooksPerProject)} book per project
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.free.maxStoryNodes)} story elements
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    Bring Your Own API Key (BYOK)
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    TXT export
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Badge variant="outline" className="w-full justify-center py-2">
+                  Current Plan
+                </Badge>
+              </CardFooter>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className="border-primary relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg">
+                Recommended
+              </div>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CardTitle>Pro</CardTitle>
+                  <Crown className="h-5 w-5 text-yellow-500" />
+                </div>
+                <CardDescription>For serious writers</CardDescription>
+                <div className="space-y-1">
+                  {selectedCycle === "annual" ? (
+                    <>
+                      <p className="text-3xl font-bold">
+                        ${pricing.annualMonthly}
+                        <span className="text-base font-normal text-muted-foreground">/month</span>
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        ${pricing.annual} billed annually
+                      </p>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                        <Zap className="mr-1 h-3 w-3" />
+                        Save ${pricing.annualSavings}/year
+                      </Badge>
+                    </>
+                  ) : (
+                    <p className="text-3xl font-bold">
+                      ${pricing.monthly}
+                      <span className="text-base font-normal text-muted-foreground">/month</span>
+                    </p>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.pro.maxProjects)} projects
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.pro.maxBooksPerProject)} books per project
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    {formatLimit(SUBSCRIPTION_TIERS.pro.maxStoryNodes)} story elements
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    Bring Your Own API Key (BYOK)
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    All export formats (TXT, DOCX, EPUB)
+                  </li>
+                  <li className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    Priority support
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  onClick={() => handleUpgrade(selectedCycle)}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="mr-2 h-4 w-4" />
+                  )}
+                  {selectedCycle === "annual"
+                    ? `Upgrade to Pro - $${pricing.annual}/year`
+                    : `Upgrade to Pro - $${pricing.monthly}/month`
+                  }
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </>
+      )}
+
+      {/* BYOK Explanation */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Bring Your Own Key (BYOK)
+          </CardTitle>
+          <CardDescription>
+            Use your own AI provider API keys for unlimited AI generation
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            NovelWorld uses a BYOK model - you provide your own API key from your preferred AI provider
+            (Anthropic Claude, OpenAI GPT-4, or Google Gemini). This means:
+          </p>
+          <ul className="space-y-2 text-sm">
+            <li className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-500 mt-0.5" />
+              <span><strong>No AI usage limits</strong> - generate as much as your API key allows</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-500 mt-0.5" />
+              <span><strong>Pay-as-you-go</strong> - only pay for what you use directly to the provider</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-500 mt-0.5" />
+              <span><strong>Choose your provider</strong> - use Claude, GPT-4, or Gemini based on your preference</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-500 mt-0.5" />
+              <span><strong>Secure storage</strong> - your API key is encrypted and never shared</span>
+            </li>
+          </ul>
+          <div className="pt-2">
+            <Link href="/dashboard/settings/ai">
+              <Button variant="outline">
+                <Key className="mr-2 h-4 w-4" />
+                Configure AI Settings
               </Button>
-            )}
-          </CardFooter>
-        </Card>
-      </div>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

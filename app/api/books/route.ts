@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkBookLimit } from "@/lib/subscription/limits";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +13,15 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit content creation
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.CONTENT_WRITE, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
 
     const body = await request.json();

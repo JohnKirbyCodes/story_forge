@@ -4,8 +4,8 @@ import { Footer } from "@/components/shared/footer";
 import { BookOpen } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy - StoryForge AI",
-  description: "Privacy Policy for StoryForge AI",
+  title: "Privacy Policy - NovelWorld AI",
+  description: "Privacy Policy for NovelWorld AI",
 };
 
 export default function PrivacyPage() {
@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">StoryForge AI</span>
+            <span className="text-xl font-bold">NovelWorld AI</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/login">
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
 
             <h2>1. Information We Collect</h2>
             <p>
-              When you use StoryForge AI, we collect information you provide directly to us, including:
+              When you use NovelWorld AI, we collect information you provide directly to us, including:
             </p>
             <ul>
               <li>Account information (name, email address)</li>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
             <h2>8. Contact Us</h2>
             <p>
               If you have questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:privacy@storyforge.ai">privacy@storyforge.ai</a>.
+              <a href="mailto:privacy@novelworld.ai">privacy@novelworld.ai</a>.
             </p>
           </div>
         </div>

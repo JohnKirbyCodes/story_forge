@@ -28,7 +28,14 @@ import { NodeDetailPanel } from "./node-detail-panel";
 import { EditEdgeDialog } from "./edit-edge-dialog";
 import { LabeledEdge } from "./labeled-edge";
 import { EdgeFilterPanel } from "./edge-filter-panel";
-import { Plus, Users, MapPin, Swords, Lightbulb, Package, Calendar } from "lucide-react";
+import { GenerateUniverseDialog } from "./generate-universe-dialog";
+import { Plus, Users, MapPin, Swords, Lightbulb, Package, Calendar, LayoutGrid, Loader2, Sparkles } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { RELATIONSHIP_TYPES } from "@/lib/story-universe-schema";
 
 const nodeTypes: NodeTypes = {
@@ -60,6 +67,121 @@ function getEdgeCategory(edge: StoryEdge): string {
     if (found) return found.category;
   }
   return "Other";
+}
+
+// Layout algorithms for auto-organize feature
+type LayoutType = "byType" | "radial" | "grid";
+
+interface NodePosition {
+  id: string;
+  x: number;
+  y: number;
+}
+
+// Group nodes by type and arrange in clusters
+function layoutByType(nodes: StoryNode[]): NodePosition[] {
+  const nodesByType: Record<string, StoryNode[]> = {};
+
+  // Group nodes by type
+  nodes.forEach((node) => {
+    if (!nodesByType[node.node_type]) {
+      nodesByType[node.node_type] = [];
+    }
+    nodesByType[node.node_type].push(node);
+  });
+
+  const typeOrder = ["character", "location", "faction", "item", "event", "concept"];
+  const positions: NodePosition[] = [];
+
+  // Layout configuration - generous spacing for readability
+  const horizontalSpacing = 400; // Space between columns within a type
+  const verticalSpacing = 200;   // Space between nodes vertically
+  const typeGap = 500;           // Extra gap between different node types
+  const maxNodesPerColumn = 5;
+
+  let currentX = 0;
+
+  typeOrder.forEach((type) => {
+    const typeNodes = nodesByType[type] || [];
+    if (typeNodes.length === 0) return;
+
+    // Calculate columns needed for this type
+    const columns = Math.ceil(typeNodes.length / maxNodesPerColumn);
+
+    typeNodes.forEach((node, index) => {
+      const col = Math.floor(index / maxNodesPerColumn);
+      const row = index % maxNodesPerColumn;
+
+      positions.push({
+        id: node.id,
+        x: currentX + col * horizontalSpacing,
+        y: row * verticalSpacing,
+      });
+    });
+
+    // Move to next type cluster with generous gap
+    currentX += columns * horizontalSpacing + typeGap;
+  });
+
+  return positions;
+}
+
+// Radial layout - arrange nodes in concentric circles by type
+function layoutRadial(nodes: StoryNode[]): NodePosition[] {
+  const nodesByType: Record<string, StoryNode[]> = {};
+
+  nodes.forEach((node) => {
+    if (!nodesByType[node.node_type]) {
+      nodesByType[node.node_type] = [];
+    }
+    nodesByType[node.node_type].push(node);
+  });
+
+  const typeOrder = ["character", "location", "faction", "item", "event", "concept"];
+  const positions: NodePosition[] = [];
+
+  const centerX = 0;
+  const centerY = 0;
+  let currentRadius = 0;
+  const radiusStep = 300;
+
+  typeOrder.forEach((type, typeIndex) => {
+    const typeNodes = nodesByType[type] || [];
+    if (typeNodes.length === 0) return;
+
+    currentRadius = (typeIndex + 1) * radiusStep;
+    const angleStep = (2 * Math.PI) / typeNodes.length;
+
+    typeNodes.forEach((node, index) => {
+      const angle = index * angleStep - Math.PI / 2; // Start from top
+      positions.push({
+        id: node.id,
+        x: centerX + currentRadius * Math.cos(angle),
+        y: centerY + currentRadius * Math.sin(angle),
+      });
+    });
+  });
+
+  return positions;
+}
+
+// Simple grid layout
+function layoutGrid(nodes: StoryNode[]): NodePosition[] {
+  const positions: NodePosition[] = [];
+  const columns = Math.ceil(Math.sqrt(nodes.length));
+  const spacing = 250;
+
+  nodes.forEach((node, index) => {
+    const col = index % columns;
+    const row = Math.floor(index / columns);
+    positions.push({
+      id: node.id,
+      x: col * spacing,
+      y: row * spacing,
+    });
+  });
+
+  return positions;
 }
 
 // Colors for different node types
@@ -96,11 +218,15 @@ export function KnowledgeGraph({
   const supabase = createClient();
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [createNodeType, setCreateNodeType] = useState<string>("character");
 
   // Focus mode and filtering state
   const [focusedNodeIds, setFocusedNodeIds] = useState<string[]>([]);
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+
+  // Organize/layout state
+  const [isOrganizing, setIsOrganizing] = useState(false);
 
   // Label offset state (for draggable labels)
   // Note: Offsets are stored in local state only for this session
@@ -308,6 +434,66 @@ export function KnowledgeGraph({
     setCreateDialogOpen(true);
   };
 
+  // Handle auto-organize layout
+  const handleOrganize = useCallback(
+    async (layoutType: LayoutType) => {
+      setIsOrganizing(true);
+
+      try {
+        // Calculate new positions based on layout type
+        let newPositions: NodePosition[];
+        switch (layoutType) {
+          case "byType":
+            newPositions = layoutByType(initialNodes);
+            break;
+          case "radial":
+            newPositions = layoutRadial(initialNodes);
+            break;
+          case "grid":
+            newPositions = layoutGrid(initialNodes);
+            break;
+          default:
+            newPositions = layoutByType(initialNodes);
+        }
+
+        // Update local node positions immediately for responsive UI
+        setNodes((nds) =>
+          nds.map((node) => {
+            const newPos = newPositions.find((p) => p.id === node.id);
+            if (newPos) {
+              return {
+                ...node,
+                position: { x: newPos.x, y: newPos.y },
+              };
+            }
+            return node;
+          })
+        );
+
+        // Save all positions to database in parallel
+        await Promise.all(
+          newPositions.map((pos) =>
+            supabase
+              .from("story_nodes")
+              .update({
+                position_x: pos.x,
+                position_y: pos.y,
+              })
+              .eq("id", pos.id)
+          )
+        );
+
+        // Refresh to sync with database
+        router.refresh();
+      } catch (error) {
+        console.error("Error organizing nodes:", error);
+      } finally {
+        setIsOrganizing(false);
+      }
+    },
+    [initialNodes, setNodes, supabase, router]
+  );
+
   // Edge filter handlers
   const handleCategoryToggle = useCallback((category: string) => {
     setHiddenCategories((prev) => {
@@ -445,6 +631,17 @@ export function KnowledgeGraph({
             Concept
           </Button>
           <div className="border-l pl-2 ml-1">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setGenerateDialogOpen(true)}
+              className="bg-background"
+            >
+              <Sparkles className="mr-2 h-4 w-4 text-purple-500" />
+              Generate
+            </Button>
+          </div>
+          <div className="border-l pl-2 ml-1">
             <EdgeFilterPanel
               focusedNodeIds={focusedNodeIds}
               onFocusChange={setFocusedNodeIds}
@@ -457,11 +654,44 @@ export function KnowledgeGraph({
               visibleEdgeCount={visibleEdgeCount}
             />
           </div>
+          <div className="border-l pl-2 ml-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-background"
+                  disabled={isOrganizing}
+                >
+                  {isOrganizing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LayoutGrid className="mr-2 h-4 w-4" />
+                  )}
+                  Organize
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => handleOrganize("byType")}>
+                  <Users className="mr-2 h-4 w-4" />
+                  By Type (Columns)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleOrganize("radial")}>
+                  <div className="mr-2 h-4 w-4 rounded-full border-2" />
+                  Radial (Circles)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleOrganize("grid")}>
+                  <LayoutGrid className="mr-2 h-4 w-4" />
+                  Grid
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </Panel>
 
         {/* Instructions */}
         <Panel position="bottom-center" className="text-xs text-muted-foreground bg-background/80 px-3 py-1 rounded">
-          Click node to edit • Double-click to focus • Drag labels to reposition
+          Click node to edit • Double-click to focus • Drag labels to reposition • Use Organize to auto-layout
         </Panel>
       </ReactFlow>
 
@@ -499,6 +729,13 @@ export function KnowledgeGraph({
         projectId={projectId}
         onSaved={handleEdgeSaved}
         onDeleted={handleEdgeDeleted}
+      />
+
+      {/* Generate Universe Dialog */}
+      <GenerateUniverseDialog
+        open={generateDialogOpen}
+        onOpenChange={setGenerateDialogOpen}
+        projectId={projectId}
       />
     </div>
   );

@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { LogOut, Settings, Sparkles } from "lucide-react";
+import { LogOut, Settings, Key } from "lucide-react";
 
 interface DashboardHeaderProps {
   user: User;
@@ -42,34 +41,14 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
         .toUpperCase()
     : user.email?.[0].toUpperCase() || "U";
 
-  // Calculate word quota usage
-  const wordsUsed = profile?.words_used_this_month || 0;
-  const wordsQuota = profile?.words_quota || 10000;
   const isPro = profile?.subscription_tier === "pro";
-  const usagePercent = wordsQuota ? Math.min((wordsUsed / wordsQuota) * 100, 100) : 0;
-  const isNearLimit = usagePercent >= 80;
-  const isAtLimit = usagePercent >= 100;
+  const hasApiKey = profile?.ai_api_key_valid === true;
 
   return (
     <header className="flex h-16 items-center justify-end border-b bg-background px-6">
       <div className="flex items-center gap-4">
-        {/* Word Quota Tracker */}
-        <Link href="/dashboard/settings/billing" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <div className="flex items-center gap-2">
-            <Sparkles className={`h-4 w-4 ${isAtLimit ? "text-destructive" : isNearLimit ? "text-amber-500" : "text-muted-foreground"}`} />
-            <div className="flex flex-col items-end">
-              <span className={`text-sm font-medium ${isAtLimit ? "text-destructive" : isNearLimit ? "text-amber-600" : ""}`}>
-                {wordsUsed.toLocaleString()} / {wordsQuota.toLocaleString()}
-              </span>
-              <span className="text-xs text-muted-foreground">AI words this month</span>
-            </div>
-          </div>
-          <div className="w-24">
-            <Progress
-              value={usagePercent}
-              className={`h-2 ${isAtLimit ? "[&>div]:bg-destructive" : isNearLimit ? "[&>div]:bg-amber-500" : ""}`}
-            />
-          </div>
+        {/* Subscription & API Key Status */}
+        <Link href="/dashboard/settings/billing" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           {!isPro && (
             <Badge variant="outline" className="text-xs">
               Free
@@ -81,6 +60,19 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
             </Badge>
           )}
         </Link>
+
+        {/* API Key indicator */}
+        <Link
+          href="/dashboard/settings/ai"
+          className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+          title={hasApiKey ? "API key configured" : "Configure your AI API key"}
+        >
+          <Key className={`h-4 w-4 ${hasApiKey ? "text-green-500" : "text-muted-foreground"}`} />
+          {!hasApiKey && (
+            <span className="text-xs text-muted-foreground">Setup AI</span>
+          )}
+        </Link>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">

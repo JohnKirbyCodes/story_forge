@@ -1,10 +1,11 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { trackAIUsage, extractUsageFromResult } from "@/lib/ai/usage-tracker";
-import { checkWordQuota, incrementWordUsage, countWords } from "@/lib/subscription/limits";
+import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
+import { isValidModel } from "@/lib/ai/providers/config";
+import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export const maxDuration = 120;
 
@@ -41,6 +42,19 @@ const outlineSchema = z.object({
             .enum(["low", "medium", "high", "peak"])
             .optional()
             .describe("Tension level (peak = climactic moments)"),
+          // Node references for auto-linking
+          characters: z
+            .array(z.string())
+            .optional()
+            .describe("Names of characters appearing in this scene"),
+          pov_character: z
+            .string()
+            .optional()
+            .describe("Name of the POV character for this scene (if applicable)"),
+          location: z
+            .string()
+            .optional()
+            .describe("Name of the location where this scene takes place"),
         })
       ),
     })
@@ -49,13 +63,7 @@ const outlineSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response("API key not configured", { status: 500 });
-    }
-
-    const anthropic = createAnthropic({ apiKey });
-    const { bookId, projectId, chapterCount, scenesPerChapter } =
+    const { bookId, projectId, chapterCount, scenesPerChapter, model: requestedModel } =
       await request.json();
 
     // Verify user is authenticated
@@ -68,8 +76,43 @@ export async function POST(request: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
+    // Apply rate limiting (per-minute and per-hour limits)
+    const rateLimitResult = await checkMultipleRateLimits(request, [
+      { id: RATE_LIMIT_IDS.AI_GENERATE, key: user.id },
+      { id: RATE_LIMIT_IDS.AI_GENERATE_HOURLY, key: user.id },
+    ]);
+    if (rateLimitResult.rateLimited) {
+      return createRateLimitResponse();
+    }
+
     // Use admin client to fetch data without RLS restrictions
     const adminSupabase = createAdminClient();
+
+    // Get user's configured AI provider (BYOK) - pass requested model for provider detection
+    let providerResult;
+    try {
+      providerResult = await getUserProvider(adminSupabase, user.id, requestedModel);
+    } catch (err) {
+      if (err instanceof ProviderError) {
+        return new Response(
+          JSON.stringify({
+            error: "provider_error",
+            code: err.code,
+            message: err.message,
+            provider: err.provider,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      throw err;
+    }
+
+    const { instance, provider, defaultModelId } = providerResult;
+
+    // Use requested model if valid, otherwise fall back to default
+    const modelId = (requestedModel && isValidModel(provider, requestedModel))
+      ? requestedModel
+      : defaultModelId;
 
     // Verify user owns this project
     const { data: project, error: projectError } = await adminSupabase
@@ -80,21 +123,6 @@ export async function POST(request: Request) {
 
     if (projectError || !project || project.user_id !== user.id) {
       return new Response("Forbidden", { status: 403 });
-    }
-
-    // Check word quota before generating
-    const quotaStatus = await checkWordQuota(adminSupabase, user.id);
-    if (!quotaStatus.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: "quota_exceeded",
-          message: "You've reached your monthly AI generation limit. Upgrade to Pro for more words.",
-          used: quotaStatus.used,
-          limit: quotaStatus.limit,
-          tier: quotaStatus.tier,
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
     }
 
     // Get book details
@@ -127,6 +155,7 @@ export async function POST(request: Request) {
     const factions = storyNodes?.filter((n) => n.node_type === "faction") || [];
     const events = storyNodes?.filter((n) => n.node_type === "event") || [];
     const items = storyNodes?.filter((n) => n.node_type === "item") || [];
+    const concepts = storyNodes?.filter((n) => n.node_type === "concept") || [];
 
     // Format nodes for prompt
     const formatNode = (node: typeof storyNodes extends (infer T)[] | null ? T : never) => {
@@ -213,6 +242,14 @@ export async function POST(request: Request) {
       });
     }
 
+    // Add concepts (world-building elements)
+    if (concepts.length > 0) {
+      contextStr += `\n## Concepts (World-building)\n`;
+      concepts.forEach((c) => {
+        contextStr += formatNode(c) + "\n";
+      });
+    }
+
     // Add relationships
     contextStr += formatRelationships();
 
@@ -233,22 +270,37 @@ ${contextStr}
    - Emotional beats and tension points
    - Setting details if relevant
 
+## Scene Node References (IMPORTANT)
+For each scene, you MUST specify:
+- **characters**: An array of character names (from the Characters list above) who appear in this scene. Use exact names as listed.
+- **pov_character**: The name of the POV character for the scene (if the story uses limited POV). Must be one of the characters in the scene.
+- **location**: The name of the location (from the Locations list above) where the scene takes place. Use exact name as listed.
+
+These references will be used to automatically link story elements to scenes.
+
 Create a compelling narrative arc that fits the synopsis and uses the established story elements.`;
 
     console.log("\n========== AI OUTLINE GENERATION ==========");
     console.log("Book:", book.title);
+    console.log("Provider:", provider);
+    console.log("Model:", modelId);
     console.log("Chapters requested:", chapterCount || "10-15");
     console.log("Scenes per chapter:", scenesPerChapter || "2-4");
-    console.log("Characters:", characters.length);
-    console.log("Locations:", locations.length);
+    console.log("Story Nodes:", {
+      characters: characters.length,
+      locations: locations.length,
+      factions: factions.length,
+      events: events.length,
+      items: items.length,
+      concepts: concepts.length,
+    });
     console.log("Relationships:", storyEdges?.length || 0);
     console.log("============================================\n");
 
-    const modelId = "claude-sonnet-4-20250514";
     const startTime = Date.now();
 
     const result = await generateObject({
-      model: anthropic(modelId),
+      model: instance.getModel(modelId),
       schema: outlineSchema,
       system: systemPrompt,
       prompt: `Generate a complete chapter outline for "${book.title}". Create a compelling narrative structure with detailed scene beats that can be expanded into full prose.`,
@@ -257,28 +309,13 @@ Create a compelling narrative arc that fits the synopsis and uses the establishe
     const durationMs = Date.now() - startTime;
     const { inputTokens, outputTokens } = extractUsageFromResult(result);
 
-    // Count words in generated outline content (titles, summaries, beat instructions)
-    let totalWords = 0;
-    for (const chapter of result.object.chapters) {
-      totalWords += countWords(chapter.title);
-      totalWords += countWords(chapter.summary);
-      for (const scene of chapter.scenes) {
-        if (scene.title) totalWords += countWords(scene.title);
-        totalWords += countWords(scene.beat_instructions);
-      }
-    }
-
-    // Increment word usage
-    await incrementWordUsage(adminSupabase, user.id, totalWords);
-    console.log(`Word usage: +${totalWords} words (AI generated outline)`);
-
-    // Track AI usage
+    // Track AI usage (no word quota - BYOK model)
     await trackAIUsage({
       userId: user.id,
       projectId,
       bookId,
       endpoint: "generate-outline",
-      model: modelId,
+      model: `${provider}:${modelId}`,
       inputTokens,
       outputTokens,
       durationMs,
@@ -287,9 +324,32 @@ Create a compelling narrative arc that fits the synopsis and uses the establishe
 
     console.log(`AI Usage: ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
 
-    return Response.json(result.object);
+    // Build node name-to-ID mapping for the frontend to link scenes to nodes
+    const nodeMapping: Record<string, { id: string; type: string }> = {};
+    if (storyNodes) {
+      for (const node of storyNodes) {
+        // Use lowercase name as key for case-insensitive matching
+        nodeMapping[node.name.toLowerCase()] = {
+          id: node.id,
+          type: node.node_type,
+        };
+      }
+    }
+
+    return Response.json({
+      ...result.object,
+      nodeMapping,
+    });
   } catch (error) {
     console.error("Error generating outline:", error);
-    return new Response("Internal Server Error", { status: 500 });
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({
+        error: "generation_error",
+        message: errorMessage,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

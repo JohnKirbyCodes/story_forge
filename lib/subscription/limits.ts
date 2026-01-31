@@ -2,14 +2,6 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { getTierLimits, SubscriptionTier, isUnlimited } from './config';
 
-export interface QuotaStatus {
-  allowed: boolean;
-  used: number;
-  limit: number | null;
-  remaining: number | null;
-  tier: SubscriptionTier;
-}
-
 export interface LimitCheckResult {
   allowed: boolean;
   current: number;
@@ -22,7 +14,7 @@ type SupabaseClientType = SupabaseClient<Database>;
 async function getUserProfile(supabase: SupabaseClientType, userId: string) {
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('subscription_tier, words_used_this_month, words_quota')
+    .select('subscription_tier')
     .eq('id', userId)
     .single();
 
@@ -32,8 +24,6 @@ async function getUserProfile(supabase: SupabaseClientType, userId: string) {
 
   return {
     tier: (profile.subscription_tier || 'free') as SubscriptionTier,
-    wordsUsed: profile.words_used_this_month || 0,
-    wordsQuota: profile.words_quota || 10000,
   };
 }
 
@@ -138,72 +128,10 @@ export async function checkNodeLimit(
   };
 }
 
-export async function checkWordQuota(
-  supabase: SupabaseClientType,
-  userId: string
-): Promise<QuotaStatus> {
-  const profile = await getUserProfile(supabase, userId);
-  const limits = getTierLimits(profile.tier);
-
-  const used = profile.wordsUsed;
-  const limit = limits.monthlyWordQuota;
-
-  if (isUnlimited(limit)) {
-    return {
-      allowed: true,
-      used,
-      limit: null,
-      remaining: null,
-      tier: profile.tier,
-    };
-  }
-
-  const remaining = Math.max(0, limit! - used);
-  const allowed = used < limit!;
-
-  return {
-    allowed,
-    used,
-    limit,
-    remaining,
-    tier: profile.tier,
-  };
-}
-
-export async function incrementWordUsage(
-  supabase: SupabaseClientType,
-  userId: string,
-  wordCount: number
-): Promise<void> {
-  const { error } = await supabase.rpc('increment_word_usage', {
-    user_id: userId,
-    word_count: wordCount,
-  });
-
-  // Fallback if RPC doesn't exist yet
-  if (error) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('words_used_this_month')
-      .eq('id', userId)
-      .single();
-
-    const currentUsage = profile?.words_used_this_month || 0;
-
-    await supabase
-      .from('profiles')
-      .update({ words_used_this_month: currentUsage + wordCount })
-      .eq('id', userId);
-  }
-}
-
 export async function getUsageStats(
   supabase: SupabaseClientType,
   userId: string
 ): Promise<{
-  wordsUsed: number;
-  wordsLimit: number | null;
-  wordsRemaining: number | null;
   projectCount: number;
   projectLimit: number | null;
   nodeCount: number;
@@ -236,11 +164,6 @@ export async function getUsageStats(
   }
 
   return {
-    wordsUsed: profile.wordsUsed,
-    wordsLimit: limits.monthlyWordQuota,
-    wordsRemaining: isUnlimited(limits.monthlyWordQuota)
-      ? null
-      : Math.max(0, limits.monthlyWordQuota! - profile.wordsUsed),
     projectCount: projectCount || 0,
     projectLimit: limits.maxProjects,
     nodeCount,

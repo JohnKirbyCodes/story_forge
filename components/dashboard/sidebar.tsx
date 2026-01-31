@@ -7,6 +7,7 @@ import {
   BookOpen,
   FolderKanban,
   CreditCard,
+  Settings,
 } from "lucide-react";
 
 const navigation = [
@@ -14,6 +15,11 @@ const navigation = [
     name: "Projects",
     href: "/dashboard",
     icon: FolderKanban,
+  },
+  {
+    name: "Settings",
+    href: "/dashboard/settings/account",
+    icon: Settings,
   },
   {
     name: "Billing",
@@ -29,7 +35,7 @@ export function DashboardSidebar() {
     <aside className="hidden w-64 flex-shrink-0 border-r bg-background md:block">
       <div className="flex h-16 items-center gap-2 border-b px-6">
         <BookOpen className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold">StoryForge</span>
+        <span className="text-lg font-bold">NovelWorld</span>
       </div>
       <nav className="flex flex-col gap-1 p-4">
         {navigation.map((item) => {

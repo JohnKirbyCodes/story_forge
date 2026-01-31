@@ -4,8 +4,8 @@ import { Footer } from "@/components/shared/footer";
 import { BookOpen } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service - StoryForge AI",
-  description: "Terms of Service for StoryForge AI",
+  title: "Terms of Service - NovelWorld AI",
+  description: "Terms of Service for NovelWorld AI",
 };
 
 export default function TermsPage() {
@@ -16,7 +16,7 @@ export default function TermsPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">StoryForge AI</span>
+            <span className="text-xl font-bold">NovelWorld AI</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/login">
@@ -40,13 +40,13 @@ export default function TermsPage() {
 
             <h2>1. Acceptance of Terms</h2>
             <p>
-              By accessing or using StoryForge AI, you agree to be bound by these Terms of Service.
+              By accessing or using NovelWorld AI, you agree to be bound by these Terms of Service.
               If you do not agree to these terms, please do not use our service.
             </p>
 
             <h2>2. Description of Service</h2>
             <p>
-              StoryForge AI is a novel writing platform that provides tools for story planning,
+              NovelWorld AI is a novel writing platform that provides tools for story planning,
               character development, world-building, and AI-assisted prose generation.
             </p>
 
@@ -62,7 +62,7 @@ export default function TermsPage() {
 
             <h2>4. Content Ownership</h2>
             <p>
-              You retain full ownership of all content you create using StoryForge AI, including
+              You retain full ownership of all content you create using NovelWorld AI, including
               but not limited to stories, characters, outlines, and world-building materials.
               We claim no intellectual property rights over your creative content.
             </p>
@@ -108,7 +108,7 @@ export default function TermsPage() {
 
             <h2>10. Limitation of Liability</h2>
             <p>
-              StoryForge AI is provided &quot;as is&quot; without warranties of any kind. We are not
+              NovelWorld AI is provided &quot;as is&quot; without warranties of any kind. We are not
               liable for any indirect, incidental, or consequential damages arising from
               your use of the service.
             </p>
@@ -122,7 +122,7 @@ export default function TermsPage() {
             <h2>12. Contact</h2>
             <p>
               Questions about these Terms of Service can be directed to{" "}
-              <a href="mailto:legal@storyforge.ai">legal@storyforge.ai</a>.
+              <a href="mailto:legal@novelworld.ai">legal@novelworld.ai</a>.
             </p>
           </div>
         </div>

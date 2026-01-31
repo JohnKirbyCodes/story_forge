@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     // Get authenticated user
     const supabase = await createClient();
@@ -12,6 +13,15 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit portal requests
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.STRIPE_PORTAL, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
 
     // Get user profile with Stripe customer ID

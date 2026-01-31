@@ -1,22 +1,30 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { streamText } from "ai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { buildGraphContext, getFocusNodeIds } from "@/lib/ai/graph-context";
 import { formatContextForPrompt, buildCacheableSystemPrompt } from "@/lib/ai/context-formatter";
 import { trackAIUsage } from "@/lib/ai/usage-tracker";
-import { checkWordQuota, incrementWordUsage, countWords } from "@/lib/subscription/limits";
+import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
+import { isValidModel } from "@/lib/ai/providers/config";
+import { generateSceneSchema, validateRequest } from "@/lib/validation/schemas";
+import { logger } from "@/lib/logger";
+import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response("API key not configured", { status: 500 });
+    const body = await request.json();
+    const validation = validateRequest(generateSceneSchema, body);
+
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "validation_error", message: validation.error }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    const anthropic = new Anthropic({ apiKey });
-    const { prompt, sceneId, projectId } = await request.json();
+    const { prompt, sceneId, projectId, model: requestedModel } = validation.data;
 
     // Verify user is authenticated
     const supabase = await createClient();
@@ -28,8 +36,43 @@ export async function POST(request: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
+    // Apply rate limiting (per-minute and per-hour limits)
+    const rateLimitResult = await checkMultipleRateLimits(request, [
+      { id: RATE_LIMIT_IDS.AI_GENERATE, key: user.id },
+      { id: RATE_LIMIT_IDS.AI_GENERATE_HOURLY, key: user.id },
+    ]);
+    if (rateLimitResult.rateLimited) {
+      return createRateLimitResponse();
+    }
+
     // Use admin client to fetch data without RLS restrictions
     const adminSupabase = createAdminClient();
+
+    // Get user's configured AI provider (BYOK) - pass requested model for provider detection
+    let providerResult;
+    try {
+      providerResult = await getUserProvider(adminSupabase, user.id, requestedModel);
+    } catch (err) {
+      if (err instanceof ProviderError) {
+        return new Response(
+          JSON.stringify({
+            error: "provider_error",
+            code: err.code,
+            message: err.message,
+            provider: err.provider,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      throw err;
+    }
+
+    const { instance, provider, defaultModelId } = providerResult;
+
+    // Use requested model if valid, otherwise fall back to default
+    const modelId = (requestedModel && isValidModel(provider, requestedModel))
+      ? requestedModel
+      : defaultModelId;
 
     // Verify user owns this project
     const { data: project, error: projectError } = await adminSupabase
@@ -40,21 +83,6 @@ export async function POST(request: Request) {
 
     if (projectError || !project || project.user_id !== user.id) {
       return new Response("Forbidden", { status: 403 });
-    }
-
-    // Check word quota before generating
-    const quotaStatus = await checkWordQuota(adminSupabase, user.id);
-    if (!quotaStatus.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: "quota_exceeded",
-          message: "You've reached your monthly AI generation limit. Upgrade to Pro for more words.",
-          used: quotaStatus.used,
-          limit: quotaStatus.limit,
-          tier: quotaStatus.tier,
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
     }
 
     // Get scene's chapter and book IDs for context building
@@ -99,129 +127,92 @@ export async function POST(request: Request) {
       graphContext
     );
 
-    // Log context for debugging (check terminal output)
-    console.log("\n========== AI GENERATION CONTEXT ==========");
-    console.log("Scene ID:", sceneId);
-    console.log("Focus Nodes:", focusNodeIds.length, "nodes");
-    console.log("POV Node:", povNodeId || "None");
-    console.log("Graph Context Summary:");
-    console.log("  - Characters:", graphContext.nodes.filter(n => n.type === "character").length);
-    console.log("  - Locations:", graphContext.nodes.filter(n => n.type === "location").length);
-    console.log("  - Relationships:", graphContext.relationships.length);
-    console.log("  - Previous Scenes:", graphContext.previousScenes.length);
-    console.log("  - Events:", graphContext.events.length);
-    console.log("\n--- CACHEABLE SYSTEM PROMPT PARTS ---");
-    console.log("Static Part (cacheable):", staticPart.length, "chars");
-    console.log("Book Part (cacheable per book):", bookPart.length, "chars");
-    console.log("Context Part (per scene):", contextPart.length, "chars");
-    console.log("\n--- USER PROMPT ---\n");
-    console.log(prompt);
-    console.log("\n============================================\n");
+    // Log context for debugging (only in development)
+    logger.debug("AI generation context", {
+      provider,
+      model: modelId,
+      sceneId,
+      focusNodes: focusNodeIds.length,
+      povNode: povNodeId || "None",
+      context: {
+        characters: graphContext.nodes.filter(n => n.type === "character").length,
+        locations: graphContext.nodes.filter(n => n.type === "location").length,
+        relationships: graphContext.relationships.length,
+        previousScenes: graphContext.previousScenes.length,
+        events: graphContext.events.length,
+      },
+    });
 
-    const modelId = "claude-sonnet-4-20250514";
     const startTime = Date.now();
 
-    // Combine static + book parts for caching (need minimum 1024 tokens)
-    // The scene context changes per scene, so it's not cached
-    const cacheableSystemContent = `${staticPart}\n\n${bookPart}`;
+    // Build full system prompt
+    const systemPrompt = `${staticPart}\n\n${bookPart}\n\n## Scene Context\n${contextPart}`;
 
-    // Use Anthropic SDK directly with cache_control for prompt caching
-    // This enables 90% cost savings on repeated requests within 1 hour
-    const stream = anthropic.messages.stream({
-      model: modelId,
-      max_tokens: 4096,
-      system: [
-        {
-          type: "text",
-          text: cacheableSystemContent,
-          // Mark this content for caching (ephemeral = 1 hour cache)
-          cache_control: { type: "ephemeral" },
-        },
-        {
-          type: "text",
-          text: `## Scene Context\n${contextPart}`,
-          // Scene-specific context is NOT cached (changes per scene)
-        },
-      ],
-      messages: [
-        {
-          role: "user",
-          content: `Expand the following beat instructions into polished prose:\n\n${prompt}`,
-        },
-      ],
-    });
+    // Use Vercel AI SDK streamText for multi-provider support
+    const result = streamText({
+      model: instance.getModel(modelId),
+      system: systemPrompt,
+      prompt: `Expand the following beat instructions into polished prose:\n\n${prompt}`,
+      onFinish: async ({ text, usage }) => {
+        const durationMs = Date.now() - startTime;
+        const inputTokens = (usage as { inputTokens?: number })?.inputTokens ?? 0;
+        const outputTokens = (usage as { outputTokens?: number })?.outputTokens ?? 0;
 
-    // Create a ReadableStream to send text chunks to the client
-    const encoder = new TextEncoder();
-    let generatedText = ""; // Accumulate for word counting
+        // Save generated prose to database
+        if (text && text.trim()) {
+          const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+          const { error: updateError } = await adminSupabase
+            .from("scenes")
+            .update({
+              generated_prose: text,
+              word_count: wordCount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", sceneId);
 
-    const readable = new ReadableStream({
-      async start(controller) {
-        try {
-          // Stream text chunks
-          for await (const event of stream) {
-            if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              generatedText += event.delta.text;
-              controller.enqueue(encoder.encode(event.delta.text));
-            }
+          if (updateError) {
+            logger.error("Failed to save generated prose", updateError, { sceneId });
+          } else {
+            logger.debug("Saved generated prose", { sceneId, wordCount });
           }
-
-          // Get final message for usage stats after streaming completes
-          const finalMessage = await stream.finalMessage();
-          const durationMs = Date.now() - startTime;
-
-          const inputTokens = finalMessage.usage?.input_tokens ?? 0;
-          const outputTokens = finalMessage.usage?.output_tokens ?? 0;
-          const cacheCreationInputTokens = finalMessage.usage?.cache_creation_input_tokens ?? 0;
-          const cacheReadInputTokens = finalMessage.usage?.cache_read_input_tokens ?? 0;
-
-          // Count words in generated text and increment usage
-          const wordCount = countWords(generatedText);
-          await incrementWordUsage(adminSupabase, user.id, wordCount);
-          console.log(`Word usage: +${wordCount} words (AI generated)`);
-
-          // Track AI usage
-          trackAIUsage({
-            userId: user.id,
-            projectId,
-            bookId,
-            sceneId,
-            endpoint: "generate-scene",
-            model: modelId,
-            inputTokens,
-            outputTokens,
-            cacheCreationInputTokens,
-            cacheReadInputTokens,
-            durationMs,
-            status: "success",
-          });
-
-          // Log with cache info
-          const cacheInfo = cacheReadInputTokens > 0
-            ? ` (${cacheReadInputTokens} from cache)`
-            : cacheCreationInputTokens > 0
-            ? ` (${cacheCreationInputTokens} written to cache)`
-            : "";
-          console.log(`AI Usage: ${inputTokens} input${cacheInfo}, ${outputTokens} output tokens in ${durationMs}ms`);
-
-          controller.close();
-        } catch (error) {
-          controller.error(error);
         }
+
+        // Track AI usage (no quota enforcement with BYOK)
+        trackAIUsage({
+          userId: user.id,
+          projectId,
+          bookId,
+          sceneId,
+          endpoint: "generate-scene",
+          model: `${provider}:${modelId}`,
+          inputTokens,
+          outputTokens,
+          durationMs,
+          status: "success",
+        });
+
+        logger.aiUsage({
+          provider,
+          model: modelId,
+          inputTokens,
+          outputTokens,
+          durationMs,
+          endpoint: "generate-scene",
+        });
       },
     });
 
-    return new Response(readable, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Transfer-Encoding": "chunked",
-      },
-    });
+    return result.toTextStreamResponse();
   } catch (error) {
-    console.error("Error generating scene:", error);
-    return new Response("Internal Server Error", { status: 500 });
+    logger.error("Scene generation failed", error);
+
+    // Return structured error response (don't expose internal error details)
+    return new Response(
+      JSON.stringify({
+        error: "generation_error",
+        message: "An error occurred during generation. Please try again.",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkNodeLimit } from "@/lib/subscription/limits";
+import { createStoryNodeSchema, validateRequest } from "@/lib/validation/schemas";
+import { logger } from "@/lib/logger";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -14,15 +17,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { name, description, node_type, project_id, position_x, position_y } = body;
-
-    if (!name || !node_type || !project_id) {
-      return NextResponse.json(
-        { error: "Name, node_type, and project_id are required" },
-        { status: 400 }
-      );
+    // Rate limit content creation
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.CONTENT_WRITE, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
+
+    const body = await request.json();
+    const validation = validateRequest(createStoryNodeSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { name, description, node_type, project_id, position_x, position_y } = validation.data;
 
     // Use admin client for limit checking and creation
     const adminSupabase = createAdminClient();
@@ -67,7 +78,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error("Error creating story node:", error);
+      logger.error("Failed to create story node", error);
       return NextResponse.json(
         { error: "Failed to create story node" },
         { status: 500 }
@@ -76,7 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in story node creation:", error);
+    logger.error("Story node creation failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -8,18 +8,30 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, PenLine, Loader2, Check, AlertCircle } from "lucide-react";
+import { ModelSelector } from "@/components/shared/model-selector";
+import { AIProvider } from "@/lib/ai/providers/config";
 
 interface AddSynopsisCardProps {
   bookId: string;
   projectId: string;
+  validProviders: AIProvider[];
+  aiDefaultModel: string;
+  hasValidKey: boolean;
 }
 
-export function AddSynopsisCard({ bookId, projectId }: AddSynopsisCardProps) {
+export function AddSynopsisCard({
+  bookId,
+  projectId,
+  validProviders,
+  aiDefaultModel,
+  hasValidKey,
+}: AddSynopsisCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [synopsis, setSynopsis] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState(aiDefaultModel);
   const router = useRouter();
   const supabase = createClient();
 
@@ -52,16 +64,20 @@ export function AddSynopsisCard({ bookId, projectId }: AddSynopsisCardProps) {
       const response = await fetch("/api/ai/generate-synopsis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, projectId }),
+        body: JSON.stringify({ bookId, projectId, model: selectedModel }),
       });
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        if (data.error === "quota_exceeded") {
-          setError(data.message || "You've reached your monthly AI generation limit.");
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.error === "quota_exceeded") {
+          setError(errorData.message || "You've reached your monthly AI generation limit.");
           return;
         }
-        throw new Error("Failed to generate synopsis");
+        if (errorData.error === "provider_error") {
+          setError(errorData.message || "AI provider error. Please check your API key in Settings.");
+          return;
+        }
+        throw new Error(errorData.error || "Failed to generate synopsis");
       }
 
       const data = await response.json();
@@ -89,20 +105,31 @@ export function AddSynopsisCard({ bookId, projectId }: AddSynopsisCardProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Synopsis</label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleGenerate}
-                  disabled={isGenerating || isSaving}
-                  className="text-xs"
-                >
-                  {isGenerating ? (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-1 h-3 w-3" />
+                <div className="flex items-center gap-2">
+                  {hasValidKey && (
+                    <ModelSelector
+                      provider={validProviders}
+                      value={selectedModel}
+                      onChange={setSelectedModel}
+                      disabled={isGenerating || isSaving}
+                      compact
+                    />
                   )}
-                  {isGenerating ? "Generating..." : "Regenerate"}
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleGenerate}
+                    disabled={isGenerating || isSaving || !hasValidKey}
+                    className="text-xs"
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-1 h-3 w-3" />
+                    )}
+                    {isGenerating ? "Generating..." : "Regenerate"}
+                  </Button>
+                </div>
               </div>
               <Textarea
                 placeholder="Write a brief synopsis of your book. This will help AI generate better chapter outlines and scene content..."
@@ -171,19 +198,34 @@ export function AddSynopsisCard({ bookId, projectId }: AddSynopsisCardProps) {
             <Sparkles className="h-3 w-3" />
             <span>Required for AI outline generation</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setIsEditing(true)} disabled={isGenerating}>
-              <PenLine className="mr-2 h-4 w-4" />
-              Write Synopsis
-            </Button>
-            <Button onClick={handleGenerate} disabled={isGenerating}>
-              {isGenerating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              {isGenerating ? "Generating..." : "Auto-generate"}
-            </Button>
+          <div className="flex flex-col items-center gap-3">
+            {hasValidKey && (
+              <ModelSelector
+                provider={validProviders}
+                value={selectedModel}
+                onChange={setSelectedModel}
+                disabled={isGenerating}
+                compact
+              />
+            )}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => setIsEditing(true)} disabled={isGenerating}>
+                <PenLine className="mr-2 h-4 w-4" />
+                Write Synopsis
+              </Button>
+              <Button
+                onClick={handleGenerate}
+                disabled={isGenerating || !hasValidKey}
+                title={!hasValidKey ? "Configure your API key in Settings" : undefined}
+              >
+                {isGenerating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {isGenerating ? "Generating..." : "Auto-generate"}
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

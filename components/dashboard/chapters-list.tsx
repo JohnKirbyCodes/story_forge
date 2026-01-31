@@ -23,6 +23,7 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -148,6 +149,7 @@ export function ChaptersList({
     scenes: Scene[];
   } | null>(null);
   const [generatingSceneId, setGeneratingSceneId] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
 
   const router = useRouter();
   const supabase = createClient();
@@ -277,6 +279,7 @@ export function ChaptersList({
     if (!scene.beat_instructions) return;
 
     setGeneratingSceneId(scene.id);
+    setGenerationError(null);
 
     try {
       const response = await fetch("/api/ai/generate-scene", {
@@ -290,6 +293,15 @@ export function ChaptersList({
       });
 
       if (!response.ok) {
+        // Parse error response for better error messages
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const errorData = await response.json();
+          if (errorData.error === "provider_error") {
+            throw new Error(errorData.message || "Please configure your API key in Settings.");
+          }
+          throw new Error(errorData.error || "Generation failed");
+        }
         throw new Error("Generation failed");
       }
 
@@ -305,6 +317,7 @@ export function ChaptersList({
       router.refresh();
     } catch (error) {
       console.error("Error generating scene:", error);
+      setGenerationError(error instanceof Error ? error.message : "Generation failed");
     } finally {
       setGeneratingSceneId(null);
     }
@@ -331,6 +344,24 @@ export function ChaptersList({
 
   return (
     <>
+      {/* Error display for generation failures */}
+      {generationError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{generationError}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-1 hover:bg-transparent"
+              onClick={() => setGenerationError(null)}
+            >
+              Dismiss
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

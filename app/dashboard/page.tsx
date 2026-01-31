@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProjectsList } from "@/components/dashboard/projects-list";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
+import { CompleteSetupBanner } from "@/components/onboarding/CompleteSetupBanner";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,6 +13,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <CompleteSetupBanner />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">My Projects</h1>

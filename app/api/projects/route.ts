@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkProjectLimit } from "@/lib/subscription/limits";
+import { createProjectSchema, validateRequest } from "@/lib/validation/schemas";
+import { logger } from "@/lib/logger";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -14,12 +17,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { title, description, genre } = body;
-
-    if (!title) {
-      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    // Rate limit content creation
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.CONTENT_WRITE, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
+
+    const body = await request.json();
+    const validation = validateRequest(createProjectSchema, body);
+
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
+    const { title, description, genre } = validation.data;
 
     // Use admin client for limit checking and creation
     const adminSupabase = createAdminClient();
@@ -51,7 +65,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error("Error creating project:", error);
+      logger.error("Failed to create project", error);
       return NextResponse.json(
         { error: "Failed to create project" },
         { status: 500 }
@@ -60,7 +74,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in project creation:", error);
+    logger.error("Project creation failed", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

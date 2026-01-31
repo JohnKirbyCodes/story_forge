@@ -1,21 +1,16 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { trackAIUsage, extractUsageFromResult } from "@/lib/ai/usage-tracker";
-import { checkWordQuota, incrementWordUsage, countWords } from "@/lib/subscription/limits";
+import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
+import { isValidModel } from "@/lib/ai/providers/config";
+import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response("API key not configured", { status: 500 });
-    }
-
-    const anthropic = createAnthropic({ apiKey });
-    const { bookId, projectId } = await request.json();
+    const { bookId, projectId, model: requestedModel } = await request.json();
 
     // Verify user is authenticated
     const supabase = await createClient();
@@ -27,8 +22,43 @@ export async function POST(request: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
+    // Apply rate limiting (per-minute and per-hour limits)
+    const rateLimitResult = await checkMultipleRateLimits(request, [
+      { id: RATE_LIMIT_IDS.AI_GENERATE, key: user.id },
+      { id: RATE_LIMIT_IDS.AI_GENERATE_HOURLY, key: user.id },
+    ]);
+    if (rateLimitResult.rateLimited) {
+      return createRateLimitResponse();
+    }
+
     // Use admin client to fetch data without RLS restrictions
     const adminSupabase = createAdminClient();
+
+    // Get user's configured AI provider (BYOK) - pass requested model for provider detection
+    let providerResult;
+    try {
+      providerResult = await getUserProvider(adminSupabase, user.id, requestedModel);
+    } catch (err) {
+      if (err instanceof ProviderError) {
+        return new Response(
+          JSON.stringify({
+            error: "provider_error",
+            code: err.code,
+            message: err.message,
+            provider: err.provider,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      throw err;
+    }
+
+    const { instance, provider, defaultModelId } = providerResult;
+
+    // Use requested model if valid, otherwise fall back to default
+    const modelId = (requestedModel && isValidModel(provider, requestedModel))
+      ? requestedModel
+      : defaultModelId;
 
     // Verify user owns this project
     const { data: project, error: projectError } = await adminSupabase
@@ -39,21 +69,6 @@ export async function POST(request: Request) {
 
     if (projectError || !project || project.user_id !== user.id) {
       return new Response("Forbidden", { status: 403 });
-    }
-
-    // Check word quota before generating
-    const quotaStatus = await checkWordQuota(adminSupabase, user.id);
-    if (!quotaStatus.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: "quota_exceeded",
-          message: "You've reached your monthly AI generation limit. Upgrade to Pro for more words.",
-          used: quotaStatus.used,
-          limit: quotaStatus.limit,
-          tier: quotaStatus.tier,
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
     }
 
     // Get book details
@@ -199,16 +214,17 @@ Write the synopsis in a professional, engaging style suitable for a book descrip
 
     console.log("\n========== AI SYNOPSIS GENERATION ==========");
     console.log("Book:", book.title);
+    console.log("Provider:", provider);
+    console.log("Model:", modelId);
     console.log("Characters:", characters.length);
     console.log("Locations:", locations.length);
     console.log("Relationships:", storyEdges?.length || 0);
     console.log("============================================\n");
 
-    const modelId = "claude-sonnet-4-20250514";
     const startTime = Date.now();
 
     const result = await generateText({
-      model: anthropic(modelId),
+      model: instance.getModel(modelId),
       system: systemPrompt,
       prompt: `Generate a compelling synopsis for "${book.title}".`,
     });
@@ -216,23 +232,16 @@ Write the synopsis in a professional, engaging style suitable for a book descrip
     const durationMs = Date.now() - startTime;
     const synopsis = result.text.trim();
 
-    // Count words in generated synopsis
-    const wordCount = countWords(synopsis);
-
-    // Increment word usage
-    await incrementWordUsage(adminSupabase, user.id, wordCount);
-    console.log(`Word usage: +${wordCount} words (AI generated synopsis)`);
-
     // Extract usage metrics
     const { inputTokens, outputTokens } = extractUsageFromResult(result);
 
-    // Track AI usage
+    // Track AI usage (no word quota - BYOK model)
     await trackAIUsage({
       userId: user.id,
       projectId,
       bookId,
       endpoint: "generate-synopsis",
-      model: modelId,
+      model: `${provider}:${modelId}`,
       inputTokens,
       outputTokens,
       durationMs,
@@ -244,6 +253,14 @@ Write the synopsis in a professional, engaging style suitable for a book descrip
     return Response.json({ synopsis });
   } catch (error) {
     console.error("Error generating synopsis:", error);
-    return new Response("Internal Server Error", { status: 500 });
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({
+        error: "generation_error",
+        message: errorMessage,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 export async function GET(request: Request) {
   try {
@@ -19,6 +20,15 @@ export async function GET(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit export operations (expensive, hourly limit)
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.EXPORT_OPERATIONS, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse(3600); // Retry after 1 hour
     }
 
     const adminSupabase = createAdminClient();

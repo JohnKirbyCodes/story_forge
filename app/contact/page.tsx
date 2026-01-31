@@ -4,8 +4,8 @@ import { Footer } from "@/components/shared/footer";
 import { BookOpen, Mail, MessageSquare } from "lucide-react";
 
 export const metadata = {
-  title: "Contact - StoryForge AI",
-  description: "Get in touch with the StoryForge AI team",
+  title: "Contact - NovelWorld AI",
+  description: "Get in touch with the NovelWorld AI team",
 };
 
 export default function ContactPage() {
@@ -16,7 +16,7 @@ export default function ContactPage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
             <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">StoryForge AI</span>
+            <span className="text-xl font-bold">NovelWorld AI</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/login">
@@ -35,7 +35,7 @@ export default function ContactPage() {
           <div className="mx-auto max-w-2xl">
             <h1 className="text-4xl font-bold tracking-tight">Contact Us</h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Have questions about StoryForge AI? We&apos;d love to hear from you.
+              Have questions about NovelWorld AI? We&apos;d love to hear from you.
             </p>
 
             <div className="mt-12 space-y-8">
@@ -49,10 +49,10 @@ export default function ContactPage() {
                     For general inquiries and support requests
                   </p>
                   <a
-                    href="mailto:support@storyforge.ai"
+                    href="mailto:support@novelworld.ai"
                     className="mt-2 inline-block text-primary hover:underline"
                   >
-                    support@storyforge.ai
+                    support@novelworld.ai
                   </a>
                 </div>
               </div>
@@ -67,10 +67,10 @@ export default function ContactPage() {
                     We&apos;re always looking to improve. Share your ideas and suggestions.
                   </p>
                   <a
-                    href="mailto:feedback@storyforge.ai"
+                    href="mailto:feedback@novelworld.ai"
                     className="mt-2 inline-block text-primary hover:underline"
                   >
-                    feedback@storyforge.ai
+                    feedback@novelworld.ai
                   </a>
                 </div>
               </div>

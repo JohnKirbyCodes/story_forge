@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SceneEditor } from "@/components/editor/scene-editor";
 import { StoryUniverseSheet } from "@/components/dashboard/story-universe-sheet";
 import { ArrowLeft } from "lucide-react";
+import { AIProvider, getDefaultModel } from "@/lib/ai/providers/config";
 
 interface SceneEditorPageProps {
   params: Promise<{
@@ -70,6 +71,40 @@ export default async function SceneEditorPage({ params }: SceneEditorPageProps) 
     `)
     .eq("scene_id", sceneId);
 
+  // Fetch user profile for AI settings
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = user ? await supabase
+    .from("profiles")
+    .select(`
+      ai_provider,
+      ai_default_model,
+      ai_api_key_valid,
+      ai_model_scene,
+      ai_model_edit,
+      ai_key_valid_anthropic,
+      ai_key_valid_openai,
+      ai_key_valid_google
+    `)
+    .eq("id", user.id)
+    .single() : { data: null };
+
+  // Get valid providers (multi-provider support)
+  const validProviders: AIProvider[] = [];
+  if (profile?.ai_key_valid_anthropic) validProviders.push("anthropic");
+  if (profile?.ai_key_valid_openai) validProviders.push("openai");
+  if (profile?.ai_key_valid_google) validProviders.push("google");
+  // Fallback to legacy single-provider if no multi-provider keys
+  if (validProviders.length === 0 && profile?.ai_api_key_valid && profile?.ai_provider) {
+    validProviders.push(profile.ai_provider as AIProvider);
+  }
+
+  // Get AI settings
+  const aiDefaultModel = profile?.ai_default_model || "claude-sonnet-4-20250514";
+  const hasValidKey = validProviders.length > 0;
+  // Task-specific defaults
+  const aiSceneModel = profile?.ai_model_scene || aiDefaultModel;
+  const aiEditModel = profile?.ai_model_edit || aiDefaultModel;
+
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
       {/* Header */}
@@ -114,6 +149,10 @@ export default async function SceneEditorPage({ params }: SceneEditorPageProps) 
         projectId={projectId}
         storyNodes={storyNodes || []}
         sceneCharacters={sceneCharacters || []}
+        validProviders={validProviders}
+        aiSceneModel={aiSceneModel}
+        aiEditModel={aiEditModel}
+        hasValidKey={hasValidKey}
       />
     </div>
   );

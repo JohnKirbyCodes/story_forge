@@ -140,27 +140,40 @@ export function FloatingEditPreview({
   // rect from getBoundingClientRect() is already viewport-relative
   const previewHeight = measuredHeight || 250; // use measured or estimate
   const previewWidth = 500;
+  const padding = 16; // Minimum padding from viewport edges
 
   // Calculate available space
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const spaceAbove = rect.top;
+  const viewportHeight = window.innerHeight;
+  const viewportWidth = window.innerWidth;
+  const spaceBelow = viewportHeight - rect.bottom - padding;
+  const spaceAbove = rect.top - padding;
 
   // Determine if we should show above or below
-  const showBelow = spaceBelow > previewHeight + 20 || spaceBelow > spaceAbove;
+  // Prefer below unless there's clearly more space above
+  const showBelow = spaceBelow >= Math.min(previewHeight, 200) || spaceBelow >= spaceAbove;
 
-  // Calculate max height based on available space
+  // Calculate max height based on available space (minimum 150px to be usable)
   const maxHeight = showBelow
-    ? Math.min(400, spaceBelow - 20)
-    : Math.min(400, spaceAbove - 20);
+    ? Math.max(150, Math.min(400, spaceBelow))
+    : Math.max(150, Math.min(400, spaceAbove));
 
-  // Calculate top position
-  const top = showBelow
-    ? rect.bottom + 8
-    : Math.max(10, rect.top - Math.min(previewHeight, maxHeight) - 8);
+  // Calculate top position, ensuring it stays within viewport
+  let top: number;
+  if (showBelow) {
+    top = rect.bottom + 8;
+    // Clamp to prevent overflow at bottom
+    const maxTop = viewportHeight - Math.min(previewHeight, maxHeight) - padding;
+    top = Math.min(top, maxTop);
+  } else {
+    // Show above the selection
+    top = rect.top - Math.min(previewHeight, maxHeight) - 8;
+    // Clamp to prevent overflow at top
+    top = Math.max(padding, top);
+  }
 
   // Clamp left to stay within viewport
-  const left = Math.max(10, Math.min(rect.left, window.innerWidth - previewWidth - 20));
-  const maxWidth = Math.min(previewWidth, window.innerWidth - left - 20);
+  const left = Math.max(padding, Math.min(rect.left, viewportWidth - previewWidth - padding));
+  const maxWidth = Math.min(previewWidth, viewportWidth - left - padding);
 
   return (
     <div

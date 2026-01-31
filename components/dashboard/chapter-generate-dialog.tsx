@@ -101,7 +101,7 @@ export function ChapterGenerateDialog({
 
   // Generate a single scene
   const generateScene = useCallback(
-    async (sceneId: string, beatInstructions: string): Promise<boolean> => {
+    async (sceneId: string, beatInstructions: string): Promise<{ success: boolean; error?: string }> => {
       try {
         const response = await fetch("/api/ai/generate-scene", {
           method: "POST",
@@ -114,26 +114,39 @@ export function ChapterGenerateDialog({
         });
 
         if (!response.ok) {
-          throw new Error(`Generation failed: ${response.statusText}`);
+          // Try to parse error response for better error messages
+          const contentType = response.headers.get("content-type");
+          if (contentType?.includes("application/json")) {
+            const errorData = await response.json();
+            if (errorData.error === "provider_error") {
+              // Provider-specific error (e.g., no API key configured)
+              return {
+                success: false,
+                error: errorData.message || "AI provider error. Please check your API key in Settings."
+              };
+            }
+            // Handle other JSON errors (including generation_error)
+            return { success: false, error: errorData.message || errorData.error || "Generation failed" };
+          }
+          return { success: false, error: `Generation failed: ${response.statusText}` };
         }
 
         // For streaming response, we need to consume it
         const reader = response.body?.getReader();
-        if (!reader) throw new Error("No response body");
+        if (!reader) return { success: false, error: "No response body" };
 
-        let fullText = "";
         const decoder = new TextDecoder();
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          fullText += decoder.decode(value);
+          decoder.decode(value);
         }
 
-        return true;
+        return { success: true };
       } catch (error) {
         console.error("Error generating scene:", error);
-        return false;
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
       }
     },
     [projectId]
@@ -188,7 +201,7 @@ export function ChapterGenerateDialog({
       );
 
       // Generate the scene
-      const success = await generateScene(
+      const result = await generateScene(
         scene.id,
         scene.beat_instructions || ""
       );
@@ -199,15 +212,19 @@ export function ChapterGenerateDialog({
           s.sceneId === scene.id
             ? {
                 ...s,
-                status: success ? "completed" : "error",
-                error: success ? undefined : "Generation failed",
+                status: result.success ? "completed" : "error",
+                error: result.error,
               }
             : s
         )
       );
 
-      if (!success) {
-        addBatchError(scene.id, "Generation failed");
+      if (!result.success) {
+        addBatchError(scene.id, result.error || "Generation failed");
+        // If it's a provider error (no API key), stop the batch - no point continuing
+        if (result.error?.includes("API key") || result.error?.includes("provider")) {
+          break;
+        }
       }
 
       advanceBatchIndex();
@@ -316,6 +333,19 @@ export function ChapterGenerateDialog({
               ))}
             </div>
           </ScrollArea>
+
+          {/* Error message banner */}
+          {errorCount > 0 && sceneStatuses.find(s => s.error) && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Generation failed</p>
+                <p className="text-destructive/80">
+                  {sceneStatuses.find(s => s.error)?.error}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Summary */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
