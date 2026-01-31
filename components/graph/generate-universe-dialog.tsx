@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Sparkles, Users, MapPin, Swords, Package, Calendar, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface GenerateUniverseDialogProps {
   open: boolean;
@@ -42,9 +43,23 @@ export function GenerateUniverseDialog({
     setIsGenerating(true);
 
     try {
-      const response = await fetch("/api/ai/generate-universe", {
+      const supabase = createClient();
+
+      // Get user session for auth
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Please sign in to generate content");
+        return;
+      }
+
+      // Call Supabase Edge Function (longer timeout than Vercel)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-universe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           projectId,
           options: {
