@@ -3,6 +3,7 @@ import { Database } from "@/types/database";
 import { decryptApiKey, decryptApiKeyEmbedded } from "@/lib/crypto/api-key-encryption";
 import { createProviderInstance, ProviderInstance } from "./factory";
 import { AIProvider, getProviderConfig, getDefaultModel, isValidModel, getProviderForModel } from "./config";
+import { logger } from "@/lib/logger";
 
 export type ProviderErrorCode =
   | "NO_KEY"
@@ -68,6 +69,13 @@ export async function getUserProvider(
   if (!fullError) {
     profile = fullProfile;
   } else {
+    // Log the full profile error for debugging
+    logger.warn("Full profile query failed, falling back to legacy", {
+      errorCode: fullError.code,
+      errorMessage: fullError.message,
+      userId,
+    });
+
     // Fall back to legacy columns only (migration may not have run)
     const { data: legacyProfile, error: legacyError } = await supabase
       .from("profiles")
@@ -81,6 +89,11 @@ export async function getUserProvider(
       .single();
 
     if (legacyError) {
+      logger.error("Legacy profile query also failed", undefined, {
+        errorCode: legacyError.code,
+        errorMessage: legacyError.message,
+        userId,
+      });
       throw new ProviderError(
         "Failed to load AI settings. Please try again or contact support.",
         "PROVIDER_ERROR",
