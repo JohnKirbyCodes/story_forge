@@ -89,6 +89,8 @@ export interface BookContext {
   synopsis: string | null;
   sortOrder: number;
   isCurrent: boolean;
+  // Series recap for current book
+  previouslyOn: string | null;
   // Writing style metadata
   povStyle: string | null;
   tense: string | null;

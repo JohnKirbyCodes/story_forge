@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Projects</h1>
+          <h1 className="text-3xl font-bold">My Series</h1>
           <p className="text-muted-foreground">
             Create and manage your story universes
           </p>

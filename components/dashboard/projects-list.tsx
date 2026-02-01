@@ -23,9 +23,9 @@ export function ProjectsList({ projects }: ProjectsListProps) {
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <FolderKanban className="h-12 w-12 text-muted-foreground/50" />
-          <h3 className="mt-4 text-lg font-semibold">No projects yet</h3>
+          <h3 className="mt-4 text-lg font-semibold">No series yet</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Create your first project to start building your story universe.
+            Create your first series to start building your story universe.
           </p>
         </CardContent>
       </Card>

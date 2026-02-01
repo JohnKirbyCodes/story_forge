@@ -322,7 +322,7 @@ function GraphIntroScreen({ onNext }: { onNext: () => void }) {
 
       {/* Body */}
       <p className="mb-6 text-muted-foreground">
-        Your Story Universe is a{" "}
+        Your Series Universe is a{" "}
         <span className="font-medium text-foreground">knowledge graph</span>—a
         visual map of everything in your story. Characters connect to locations,
         events link to characters, and relationships evolve across books.
@@ -556,7 +556,7 @@ function CreateRelationshipScreen({
     <div className="flex w-full max-w-lg flex-col animate-in fade-in-0 slide-in-from-right-4 duration-500">
       <h2 className="mb-2 text-center text-2xl font-bold">Connect the Dots</h2>
       <p className="mb-6 text-center text-muted-foreground">
-        Relationships are what make your Story Universe powerful. Let&apos;s
+        Relationships are what make your Series Universe powerful. Let&apos;s
         connect your character to your location.
       </p>
 
@@ -654,7 +654,7 @@ function GraphRevealScreen({
       </div>
 
       {/* Headline */}
-      <h2 className="mb-3 text-2xl font-bold">Your Story Universe is Born!</h2>
+      <h2 className="mb-3 text-2xl font-bold">Your Series Universe is Born!</h2>
 
       {/* Body */}
       <p className="mb-6 text-muted-foreground">

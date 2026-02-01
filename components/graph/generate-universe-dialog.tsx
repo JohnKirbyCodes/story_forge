@@ -213,7 +213,7 @@ export function GenerateUniverseDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
-            Generate Story Universe
+            Generate Series Universe
           </DialogTitle>
           <DialogDescription>
             AI will generate characters, locations, factions, and relationships based on

@@ -80,12 +80,12 @@ export default function PricingPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border p-4">Projects</td>
+                    <td className="border p-4">Series</td>
                     <td className="border p-4 text-center">1</td>
                     <td className="border p-4 text-center">Unlimited</td>
                   </tr>
                   <tr className="bg-muted/30">
-                    <td className="border p-4">Books per project</td>
+                    <td className="border p-4">Books per series</td>
                     <td className="border p-4 text-center">1</td>
                     <td className="border p-4 text-center">Unlimited</td>
                   </tr>

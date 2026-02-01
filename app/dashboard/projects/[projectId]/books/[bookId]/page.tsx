@@ -15,6 +15,7 @@ import { StoryUniverseSheet } from "@/components/dashboard/story-universe-sheet"
 import { GenerateOutlineDialog } from "@/components/dashboard/generate-outline-dialog";
 import { AddSynopsisCard } from "@/components/dashboard/add-synopsis-card";
 import { ExportBookButton } from "@/components/dashboard/export-book-button";
+import { PreviouslyOnCard } from "@/components/dashboard/previously-on-card";
 import { AIProvider, getDefaultModel } from "@/lib/ai/providers/config";
 
 interface BookPageProps {
@@ -133,14 +134,14 @@ export default async function BookPage({ params }: BookPageProps) {
           href="/dashboard"
           className="hover:text-foreground transition-colors"
         >
-          Projects
+          Series
         </Link>
         <span>/</span>
         <Link
           href={`/dashboard/projects/${projectId}`}
           className="hover:text-foreground transition-colors"
         >
-          {project?.title || "Project"}
+          {project?.title || "Series"}
         </Link>
         <span>/</span>
         <span className="text-foreground">{book.title}</span>
@@ -254,6 +255,15 @@ export default async function BookPage({ params }: BookPageProps) {
           hasValidKey={hasValidKey}
         />
       )}
+
+      {/* Previously On - for Book 2+ */}
+      <PreviouslyOnCard
+        bookId={bookId}
+        projectId={projectId}
+        bookNumber={(book.sort_order ?? 0) + 1}
+        previouslyOn={(book as { previously_on?: string | null }).previously_on || null}
+        hasValidKey={hasValidKey}
+      />
 
       {/* Chapters/Manuscript Tabs */}
       <Tabs defaultValue="outline" className="space-y-4">

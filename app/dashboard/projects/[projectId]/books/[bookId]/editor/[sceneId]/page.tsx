@@ -120,7 +120,7 @@ export default async function SceneEditorPage({ params }: SceneEditorPageProps) 
               href={`/dashboard/projects/${projectId}`}
               className="hover:text-foreground transition-colors"
             >
-              {project?.title || "Project"}
+              {project?.title || "Series"}
             </Link>
             <span>/</span>
             <Link

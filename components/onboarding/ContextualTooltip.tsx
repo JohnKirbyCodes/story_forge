@@ -177,7 +177,7 @@ export function ContextualTooltip({
 export const TOOLTIP_CONFIGS = {
   GRAPH_INTRO: {
     id: "graph_intro",
-    title: "Your Story Universe",
+    title: "Your Series Universe",
     description:
       'Click "+ Add Node" to create characters, locations, events, and more. Drag nodes to organize. Click edges to see relationships.',
     ctaText: "Got it!",

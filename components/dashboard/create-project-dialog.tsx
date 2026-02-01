@@ -72,7 +72,7 @@ export function CreateProjectDialog() {
           setError(data.message);
           return;
         }
-        throw new Error(data.error || "Failed to create project");
+        throw new Error(data.error || "Failed to create series");
       }
 
       setOpen(false);
@@ -84,7 +84,7 @@ export function CreateProjectDialog() {
       router.push(`/dashboard/projects/${data.id}`);
     } catch (err) {
       console.error("Error creating project:", err);
-      setError(err instanceof Error ? err.message : "Failed to create project");
+      setError(err instanceof Error ? err.message : "Failed to create series");
     } finally {
       setIsLoading(false);
     }
@@ -95,13 +95,13 @@ export function CreateProjectDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          New Project
+          New Series
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
+            <DialogTitle>Create New Series</DialogTitle>
             <DialogDescription>
               Start a new story universe. You can add books, characters, and
               locations later.
@@ -174,7 +174,7 @@ export function CreateProjectDialog() {
             </Button>
             <Button type="submit" disabled={isLoading || !title}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create Project
+              Create Series
             </Button>
           </DialogFooter>
         </form>

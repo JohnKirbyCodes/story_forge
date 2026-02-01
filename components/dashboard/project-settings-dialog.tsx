@@ -103,7 +103,7 @@ export function ProjectSettingsDialog({ project }: ProjectSettingsDialogProps) {
       setOpen(false);
       router.refresh();
     } catch (error) {
-      console.error("Error saving project settings:", error);
+      console.error("Error saving series settings:", error);
     } finally {
       setIsSaving(false);
     }
@@ -114,12 +114,12 @@ export function ProjectSettingsDialog({ project }: ProjectSettingsDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings className="mr-2 h-4 w-4" />
-          Settings
+          Series Settings
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Project Settings</DialogTitle>
+          <DialogTitle>Series Settings</DialogTitle>
           <DialogDescription>
             Configure your story universe and series settings.
           </DialogDescription>
@@ -136,7 +136,7 @@ export function ProjectSettingsDialog({ project }: ProjectSettingsDialogProps) {
             {/* Basic Info */}
             <TabsContent value="basic" className="space-y-4 py-4 mt-0">
               <div className="space-y-2">
-                <Label htmlFor="title">Project Title</Label>
+                <Label htmlFor="title">Series Title</Label>
                 <Input
                   id="title"
                   value={title}
@@ -150,7 +150,7 @@ export function ProjectSettingsDialog({ project }: ProjectSettingsDialogProps) {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief description of your project..."
+                  placeholder="Brief description of your series..."
                   rows={3}
                 />
               </div>

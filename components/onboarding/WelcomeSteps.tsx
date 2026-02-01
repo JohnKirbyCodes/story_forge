@@ -143,7 +143,7 @@ function PainPointsScreen({ onNext }: { onNext: () => void }) {
       {/* Solution Tease */}
       <p className="mb-6 max-w-md text-sm text-muted-foreground sm:text-base">
         NovelWorld solves this with a{" "}
-        <span className="font-medium text-foreground">Story Universe</span>—a
+        <span className="font-medium text-foreground">Series Universe</span>—a
         knowledge graph that grows with your story.
       </p>
 
@@ -179,7 +179,7 @@ function SolutionPreviewScreen({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex w-full flex-col items-center px-4 text-center animate-in fade-in-0 slide-in-from-right-4 duration-500">
       {/* Headline */}
-      <h2 className="mb-6 text-xl font-bold sm:text-2xl">Meet Your Story Universe</h2>
+      <h2 className="mb-6 text-xl font-bold sm:text-2xl">Meet Your Series Universe</h2>
 
       {/* Feature Cards */}
       <div className="mb-6 grid w-full max-w-2xl gap-3 sm:grid-cols-3">

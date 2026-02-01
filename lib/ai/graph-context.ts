@@ -386,11 +386,30 @@ async function fetchChapterSummaries(
 /**
  * Fetch book context for series awareness
  */
+// Extended book type to include previously_on (may not be in generated types yet)
+interface BookWithRecap {
+  id: string;
+  title: string;
+  synopsis: string | null;
+  sort_order: number | null;
+  previously_on?: string | null;
+  pov_style: string | null;
+  tense: string | null;
+  prose_style: string | null;
+  pacing: string | null;
+  dialogue_style: string | null;
+  content_rating: string | null;
+  violence_level: string | null;
+  romance_level: string | null;
+  tone: string[] | null;
+}
+
 async function fetchBookContext(
   supabase: SupabaseClient<Database>,
   projectId: string,
   currentBookId: string
 ): Promise<BookContext[]> {
+  // Use type assertion since previously_on may not be in generated types yet
   const { data: books } = await supabase
     .from("books")
     .select(`
@@ -400,7 +419,7 @@ async function fetchBookContext(
       tone
     `)
     .eq("project_id", projectId)
-    .order("sort_order", { ascending: true });
+    .order("sort_order", { ascending: true }) as { data: BookWithRecap[] | null };
 
   if (!books) return [];
 
@@ -410,6 +429,8 @@ async function fetchBookContext(
     synopsis: book.synopsis,
     sortOrder: book.sort_order ?? 0,
     isCurrent: book.id === currentBookId,
+    // Series recap (for current book only) - column may not exist yet
+    previouslyOn: book.previously_on || null,
     // Writing style
     povStyle: book.pov_style || null,
     tense: book.tense || null,

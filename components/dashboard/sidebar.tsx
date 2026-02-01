@@ -10,7 +10,7 @@ import {
 
 const navigation = [
   {
-    name: "Projects",
+    name: "My Series",
     href: "/dashboard",
     icon: FolderKanban,
   },

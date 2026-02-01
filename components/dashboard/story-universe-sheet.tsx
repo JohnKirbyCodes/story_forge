@@ -83,7 +83,7 @@ export function StoryUniverseSheet({ projectId, trigger }: StoryUniverseSheetPro
           className="gap-2"
         >
           <Network className="h-4 w-4" />
-          Story Universe
+          Series Universe
         </Button>
       )}
       <SheetContent
@@ -96,7 +96,7 @@ export function StoryUniverseSheet({ projectId, trigger }: StoryUniverseSheetPro
             <div>
               <SheetTitle className="flex items-center gap-2">
                 <Network className="h-5 w-5" />
-                Story Universe
+                Series Universe
               </SheetTitle>
               <SheetDescription>
                 Explore and edit your world&apos;s characters, locations, and relationships

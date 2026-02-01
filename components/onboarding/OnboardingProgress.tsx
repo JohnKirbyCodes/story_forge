@@ -11,7 +11,7 @@ interface OnboardingProgressProps {
 const PHASE_LABELS: Record<OnboardingPhase, string> = {
   [ONBOARDING_PHASES.WELCOME]: "Welcome",
   [ONBOARDING_PHASES.AI_SETUP]: "AI Setup",
-  [ONBOARDING_PHASES.PROJECT]: "Project",
+  [ONBOARDING_PHASES.PROJECT]: "Series",
   [ONBOARDING_PHASES.UNIVERSE]: "Universe",
   [ONBOARDING_PHASES.BOOK]: "Book",
   [ONBOARDING_PHASES.TOOLTIPS]: "Tips",

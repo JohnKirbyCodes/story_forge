@@ -62,7 +62,7 @@ export function ProjectCreationSteps({ onComplete }: ProjectCreationStepsProps) 
 
   const handleCreateProject = async () => {
     if (!title.trim()) {
-      toast.error("Please enter a project title");
+      toast.error("Please enter a series title");
       return;
     }
 
@@ -81,7 +81,7 @@ export function ProjectCreationSteps({ onComplete }: ProjectCreationStepsProps) 
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.error || "Failed to create project");
+        toast.error(data.error || "Failed to create series");
         return;
       }
 
@@ -92,8 +92,8 @@ export function ProjectCreationSteps({ onComplete }: ProjectCreationStepsProps) 
       await setStep("world_bible");
       setSubStep("world_bible");
     } catch (error) {
-      console.error("Error creating project:", error);
-      toast.error("Failed to create project");
+      console.error("Error creating series:", error);
+      toast.error("Failed to create series");
     } finally {
       setIsCreating(false);
     }
@@ -125,7 +125,7 @@ export function ProjectCreationSteps({ onComplete }: ProjectCreationStepsProps) 
         !!(worldSetting.trim() || timePeriod.trim())
       );
 
-      toast.success("Project created!");
+      toast.success("Series created!");
       onComplete();
     } catch (error) {
       console.error("Error saving world bible:", error);
@@ -181,11 +181,11 @@ function ProjectIntroScreen({ onNext }: { onNext: () => void }) {
       </div>
 
       {/* Headline */}
-      <h2 className="mb-3 text-2xl font-bold">Create Your Story Universe</h2>
+      <h2 className="mb-3 text-2xl font-bold">Create Your Series Universe</h2>
 
       {/* Body */}
       <p className="mb-6 text-muted-foreground">
-        A <span className="font-medium text-foreground">Project</span> is your
+        A <span className="font-medium text-foreground">Series</span> is your
         story&apos;s home—containing all characters, locations, lore, and books in
         one connected universe.
       </p>
@@ -199,7 +199,7 @@ function ProjectIntroScreen({ onNext }: { onNext: () => void }) {
       {/* CTA */}
       <Button size="lg" onClick={onNext}>
         <Sparkles className="mr-2 h-4 w-4" />
-        Create My First Project
+        Create My First Series
       </Button>
     </div>
   );
@@ -234,7 +234,7 @@ function ProjectFormScreen({
       <div className="space-y-4">
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="project-title">Project Title</Label>
+          <Label htmlFor="project-title">Series Title</Label>
           <Input
             id="project-title"
             placeholder="e.g., The Midnight Saga"
@@ -292,7 +292,7 @@ function ProjectFormScreen({
             Creating...
           </>
         ) : (
-          "Create Project"
+          "Create Series"
         )}
       </Button>
     </div>

@@ -149,13 +149,13 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
           {/* Current limits display */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Projects:</span>{" "}
+              <span className="text-muted-foreground">Series:</span>{" "}
               <span className="font-medium">
                 {formatLimit(isPro ? SUBSCRIPTION_TIERS.pro.maxProjects : SUBSCRIPTION_TIERS.free.maxProjects)}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground">Books per project:</span>{" "}
+              <span className="text-muted-foreground">Books per series:</span>{" "}
               <span className="font-medium">
                 {formatLimit(isPro ? SUBSCRIPTION_TIERS.pro.maxBooksPerProject : SUBSCRIPTION_TIERS.free.maxBooksPerProject)}
               </span>
@@ -314,7 +314,7 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-green-500" />
-                    All export formats (TXT, DOCX, EPUB)
+                    Export to TXT
                   </li>
                   <li className="flex items-center gap-2 text-sm">
                     <Check className="h-4 w-4 text-green-500" />

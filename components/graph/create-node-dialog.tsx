@@ -132,7 +132,7 @@ export function CreateNodeDialog({
             )}
           </div>
           <SheetDescription>
-            Add a new element to your Story Universe.
+            Add a new element to your Series Universe.
           </SheetDescription>
         </SheetHeader>
 

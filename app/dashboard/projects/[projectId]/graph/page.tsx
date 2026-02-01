@@ -50,7 +50,7 @@ export default async function GraphPage({ params }: GraphPageProps) {
           </Link>
           <div>
             <h1 className="font-semibold">{project.title}</h1>
-            <p className="text-sm text-muted-foreground">Story Universe</p>
+            <p className="text-sm text-muted-foreground">Series Universe</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

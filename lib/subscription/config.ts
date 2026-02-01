@@ -26,7 +26,7 @@ export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, TierLimits> = {
     maxProjects: null, // unlimited
     maxBooksPerProject: null,
     maxStoryNodes: null,
-    exportFormats: ['txt', 'docx', 'epub'],
+    exportFormats: ['txt'], // DOCX/EPUB on roadmap
   },
 };
 

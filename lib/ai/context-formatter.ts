@@ -119,20 +119,27 @@ function formatBookSection(context: GraphContext): string | null {
     lines.push(`Synopsis: ${currentBook.synopsis}`);
   }
 
-  // Add context from previous books in series
-  const previousBooks = context.bookContext.filter(
-    (b) => b.sortOrder < currentBook.sortOrder && b.synopsis
-  );
-
-  if (previousBooks.length > 0) {
+  // Add "Previously On" recap if available (preferred over raw book synopses)
+  if (currentBook.previouslyOn) {
     lines.push("");
-    lines.push("Previous Books:");
-    for (const book of previousBooks) {
-      const excerpt =
-        book.synopsis && book.synopsis.length > 150
-          ? book.synopsis.slice(0, 150) + "..."
-          : book.synopsis;
-      lines.push(`- ${book.title}: ${excerpt}`);
+    lines.push("### Previously On...");
+    lines.push(currentBook.previouslyOn);
+  } else {
+    // Fallback: Add context from previous books in series using synopses
+    const previousBooks = context.bookContext.filter(
+      (b) => b.sortOrder < currentBook.sortOrder && b.synopsis
+    );
+
+    if (previousBooks.length > 0) {
+      lines.push("");
+      lines.push("Previous Books:");
+      for (const book of previousBooks) {
+        const excerpt =
+          book.synopsis && book.synopsis.length > 150
+            ? book.synopsis.slice(0, 150) + "..."
+            : book.synopsis;
+        lines.push(`- ${book.title}: ${excerpt}`);
+      }
     }
   }
 
