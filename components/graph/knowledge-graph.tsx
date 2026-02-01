@@ -597,9 +597,10 @@ export function KnowledgeGraph({
         onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        selectionOnDrag={true}
+        selectionOnDrag
         selectionMode={SelectionMode.Partial}
-        panOnDrag={[1, 2]}
+        selectionKeyCode="Shift"
+        panOnDrag
         fitView
         className="bg-muted/30"
       >
@@ -727,7 +728,7 @@ export function KnowledgeGraph({
 
         {/* Instructions */}
         <Panel position="bottom-center" className="text-xs text-muted-foreground bg-background/80 px-3 py-1 rounded">
-          Click to edit • Drag to multi-select • ⌘/Ctrl+click to add • Double-click to focus • Use Organize to auto-layout
+          Click to edit • Shift+drag to multi-select • ⌘/Ctrl+click to add • Double-click to focus
         </Panel>
       </ReactFlow>
 
