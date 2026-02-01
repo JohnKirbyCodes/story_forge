@@ -68,7 +68,7 @@ export function PricingSection() {
             </div>
             <p className="mt-4 text-sm text-muted-foreground">Perfect for getting started</p>
             <ul className="mt-8 space-y-4">
-              {["1 project", "1 book", "15 story elements", "Bring Your Own API Key", "TXT export"].map((item) => (
+              {["1 project", "1 book", "15 story elements", "Bring Your Own API Key", "Export to TXT"].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm">
                   <Check className="h-4 w-4 text-primary" />
                   {item}
@@ -113,7 +113,7 @@ export function PricingSection() {
                 "Unlimited books",
                 "Unlimited story elements",
                 "Bring Your Own API Key",
-                "All export formats (TXT, DOCX, EPUB)",
+                "Export to TXT",
                 "Priority support"
               ].map((item) => (
                 <li key={item} className="flex items-center gap-3 text-sm">

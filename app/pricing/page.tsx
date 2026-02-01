@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
+import { PublicHeader } from "@/components/shared/public-header";
 import { PricingSection } from "@/components/shared/pricing-section";
 import { Check, HelpCircle } from "lucide-react";
 import {
@@ -40,36 +41,7 @@ const pricingFaq = [
 export default function PricingPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold font-serif">NovelWorld</span>
-          </Link>
-          <nav className="hidden items-center gap-6 md:flex">
-            <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Features
-            </Link>
-            <Link href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              How It Works
-            </Link>
-            <Link href="/pricing" className="text-sm text-foreground font-medium transition-colors">
-              Pricing
-            </Link>
-            <Link href="/#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              FAQ
-            </Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Start Free</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader activeLink="/pricing" />
 
       <main className="flex-1">
         {/* Hero */}
@@ -160,13 +132,6 @@ export default function PricingPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="border p-4">Export to DOCX & EPUB</td>
-                    <td className="border p-4 text-center text-muted-foreground">-</td>
-                    <td className="border p-4 text-center">
-                      <Check className="inline h-4 w-4 text-green-600" />
-                    </td>
-                  </tr>
-                  <tr className="bg-muted/30">
                     <td className="border p-4">Priority support</td>
                     <td className="border p-4 text-center text-muted-foreground">-</td>
                     <td className="border p-4 text-center">
