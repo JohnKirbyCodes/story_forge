@@ -335,6 +335,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          marketing_opt_in: boolean | null
           onboarding_banner_dismissed: boolean | null
           onboarding_completed: boolean | null
           onboarding_completed_at: string | null
@@ -376,6 +377,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          marketing_opt_in?: boolean | null
           onboarding_banner_dismissed?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null
@@ -417,6 +419,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          marketing_opt_in?: boolean | null
           onboarding_banner_dismissed?: boolean | null
           onboarding_completed?: boolean | null
           onboarding_completed_at?: string | null

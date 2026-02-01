@@ -1,11 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
 import { PublicHeader } from "@/components/shared/public-header";
 import { PricingSection } from "@/components/shared/pricing-section";
 import {
-  Network,
-  Sparkles,
   Zap,
   PenLine,
   Brain,
@@ -18,6 +17,8 @@ import {
   Globe,
   Quote,
 } from "lucide-react";
+
+const STORAGE_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/NovelWorld_PublicAssets`;
 import {
   Accordion,
   AccordionContent,
@@ -128,8 +129,14 @@ export default function Home() {
                 </p>
               </div>
               <div className="rounded-2xl border bg-card p-4 shadow-lg">
-                <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                  <Network className="h-24 w-24 text-muted-foreground/30" />
+                <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
+                  <Image
+                    src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
+                    alt="NovelWorld knowledge graph showing character relationships and plot connections"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
                 </div>
                 <p className="mt-3 text-center text-sm text-muted-foreground">
                   NovelWorld knowledge graph showing character relationships and plot connections
@@ -379,8 +386,13 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                    <Network className="h-16 w-16 text-muted-foreground/30" />
+                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
+                    <Image
+                      src={`${STORAGE_BASE}/NovelWorld-NodeDetails.png`}
+                      alt="Creating detailed character and story nodes"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
               </div>
@@ -388,8 +400,13 @@ export default function Home() {
               {/* Step 2 */}
               <div className="grid items-center gap-8 md:grid-cols-2">
                 <div className="order-2 md:order-1 rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                    <Sparkles className="h-16 w-16 text-muted-foreground/30" />
+                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
+                    <Image
+                      src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
+                      alt="Story universe graph showing connected relationships"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
                 <div className="order-1 md:order-2">
@@ -415,8 +432,13 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                    <PenLine className="h-16 w-16 text-muted-foreground/30" />
+                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
+                    <Image
+                      src={`${STORAGE_BASE}/NovelWorld-BookSceneWritingEditor.png`}
+                      alt="Scene writing editor with AI assistance"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
               </div>
@@ -424,8 +446,13 @@ export default function Home() {
               {/* Step 4 */}
               <div className="grid items-center gap-8 md:grid-cols-2">
                 <div className="order-2 md:order-1 rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                    <Zap className="h-16 w-16 text-muted-foreground/30" />
+                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
+                    <Image
+                      src={`${STORAGE_BASE}/NovelWorld-AIProseEditor.png`}
+                      alt="AI-powered prose editing and refinement"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
                 <div className="order-1 md:order-2">
