@@ -593,9 +593,27 @@ Respond with valid JSON matching this exact structure:
 
     console.log(`Inserted ${insertedNodes.length} nodes and ${insertedEdges} edges`);
 
+    // Count nodes by type for the response
+    const characterNodes = insertedNodes.filter(n => n.node_type === "character").length;
+    const locationNodes = insertedNodes.filter(n => n.node_type === "location").length;
+    const factionNodes = insertedNodes.filter(n => n.node_type === "faction").length;
+    const itemNodes = insertedNodes.filter(n => n.node_type === "item").length;
+    const eventNodes = insertedNodes.filter(n => n.node_type === "event").length;
+    const conceptNodes = insertedNodes.filter(n => n.node_type === "concept").length;
+
     return new Response(
       JSON.stringify({
         success: true,
+        generated: {
+          characters: characterNodes,
+          locations: locationNodes,
+          factions: factionNodes,
+          items: itemNodes,
+          events: eventNodes,
+          concepts: conceptNodes,
+          relationships: insertedEdges,
+          total: insertedNodes.length,
+        },
         nodes: insertedNodes,
         edgesCreated: insertedEdges,
         usage: {
