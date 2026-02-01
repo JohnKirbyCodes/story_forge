@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Save, Trash2, Loader2, Sparkles } from "lucide-react";
+import { Save, Trash2, Loader2, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 import { NodeAttributeEditor } from "./node-attribute-editor";
 import { NODE_ATTRIBUTES } from "@/lib/story-universe-schema";
@@ -54,8 +54,14 @@ export function NodeDetailPanel({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichSuccess, setEnrichSuccess] = useState(false);
+  const [enrichVersion, setEnrichVersion] = useState(0);
   const router = useRouter();
   const supabase = createClient();
+
+  // Default to "attributes" tab for node types with many attributes (characters, locations)
+  const defaultTab = ["character", "location"].includes(node.node_type) ? "attributes" : "basic";
+  const [activeTab, setActiveTab] = useState(defaultTab);
 
   // Calculate attribute completeness for display
   const attributeFields = NODE_ATTRIBUTES[node.node_type] || [];
@@ -66,9 +72,6 @@ export function NodeDetailPanel({
       return value !== null && value !== undefined && value !== "";
     }).length;
   }, [attributes]);
-
-  // Default to "attributes" tab for node types with many attributes (characters, locations)
-  const defaultTab = ["character", "location"].includes(node.node_type) ? "attributes" : "basic";
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -152,11 +155,37 @@ export function NodeDetailPanel({
         throw new Error(data.message || data.error || "Failed to enrich node");
       }
 
-      toast.success("Node enriched with AI-generated details!", { duration: 5000 });
+      // Fetch the updated node data to show changes immediately
+      const { data: updatedNode, error: fetchError } = await supabase
+        .from("story_nodes")
+        .select("*")
+        .eq("id", node.id)
+        .single();
 
-      // Refresh to show updated data
+      if (!fetchError && updatedNode) {
+        // Update local state with enriched data
+        setDescription(updatedNode.description || "");
+        setAttributes((updatedNode.attributes as Record<string, unknown>) || {});
+        if (updatedNode.character_role) {
+          setCharacterRole(updatedNode.character_role);
+        }
+        // Force re-render of NodeAttributeEditor
+        setEnrichVersion(v => v + 1);
+      }
+
+      // Show success state on button
+      setEnrichSuccess(true);
+      setTimeout(() => setEnrichSuccess(false), 2000);
+
+      // Switch to attributes tab to show new data
+      setActiveTab("attributes");
+
+      toast.success("Node enriched with AI-generated details!", {
+        duration: 5000,
+      });
+
+      // Refresh the graph view in the background
       router.refresh();
-      onClose();
     } catch (error) {
       console.error("Enrichment error:", error);
       toast.error(
@@ -192,7 +221,7 @@ export function NodeDetailPanel({
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col min-h-0 overflow-hidden px-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden px-4">
           <TabsList className="grid w-full grid-cols-3 shrink-0">
             <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="attributes" className="flex items-center gap-1.5">
@@ -244,6 +273,7 @@ export function NodeDetailPanel({
 
             <TabsContent value="attributes" className="py-4 mt-0">
               <NodeAttributeEditor
+                key={enrichVersion}
                 nodeType={node.node_type}
                 attributes={attributes}
                 onChange={setAttributes}
@@ -305,14 +335,24 @@ export function NodeDetailPanel({
             <Button
               variant="outline"
               onClick={handleEnrich}
-              disabled={isEnriching || isSaving}
+              disabled={isEnriching || isSaving || enrichSuccess}
             >
-              {isEnriching ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {enrichSuccess ? (
+                <>
+                  <Check className="mr-2 h-4 w-4 text-green-500" />
+                  Enriched!
+                </>
+              ) : isEnriching ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enriching...
+                </>
               ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Enrich
+                </>
               )}
-              Enrich
             </Button>
 
             <Button onClick={handleSave} disabled={isSaving || isEnriching || !name}>

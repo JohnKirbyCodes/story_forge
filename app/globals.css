@@ -127,4 +127,61 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Typography - Book-like serif headers */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+    font-weight: 400;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl;
+  }
+
+  h6 {
+    @apply text-base md:text-lg;
+  }
+
+  /* Prose content for manuscript/editor */
+  .prose-manuscript {
+    font-family: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    letter-spacing: 0.01em;
+  }
+
+  .prose-manuscript p {
+    margin-bottom: 1.5em;
+    text-indent: 1.5em;
+  }
+
+  .prose-manuscript p:first-of-type {
+    text-indent: 0;
+  }
+
+  /* Card titles with serif */
+  .card-title-serif {
+    font-family: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
 }

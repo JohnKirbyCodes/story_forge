@@ -65,15 +65,22 @@ interface EnrichedNode {
 }
 
 Deno.serve(async (req) => {
+  console.log("========== ENRICH-NODES: Request received ==========");
+  console.log("Method:", req.method);
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
+    console.log("CORS preflight request");
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
     // Get the authorization header
     const authHeader = req.headers.get("Authorization");
+    console.log("Auth header present:", !!authHeader);
+
     if (!authHeader) {
+      console.log("ERROR: Missing authorization header");
       return new Response(
         JSON.stringify({ error: "Missing authorization header" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -90,16 +97,21 @@ Deno.serve(async (req) => {
     });
 
     // Verify user
+    console.log("Verifying user...");
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.log("ERROR: Auth failed", authError);
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    console.log("User verified:", user.id);
 
     // Parse request
+    console.log("Parsing request body...");
     const { projectId, nodeIds }: EnrichRequest = await req.json();
+    console.log("Request parsed - projectId:", projectId, "nodeIds count:", nodeIds?.length);
 
     if (!nodeIds || nodeIds.length === 0) {
       return new Response(
