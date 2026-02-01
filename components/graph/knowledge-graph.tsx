@@ -17,8 +17,6 @@ import {
   NodeTypes,
   EdgeTypes,
   Panel,
-  SelectionMode,
-  OnSelectionChangeParams,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { createClient } from "@/lib/supabase/client";
@@ -27,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { StoryNodeComponent } from "./story-node";
 import { CreateNodeDialog } from "./create-node-dialog";
 import { NodeDetailPanel } from "./node-detail-panel";
-import { MultiNodeDetailPanel } from "./multi-node-detail-panel";
 import { EditEdgeDialog } from "./edit-edge-dialog";
 import { LabeledEdge } from "./labeled-edge";
 import { EdgeFilterPanel } from "./edge-filter-panel";
@@ -220,7 +217,6 @@ export function KnowledgeGraph({
   const router = useRouter();
   const supabase = createClient();
   const [selectedNode, setSelectedNode] = useState<StoryNode | null>(null);
-  const [selectedNodes, setSelectedNodes] = useState<StoryNode[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [createNodeType, setCreateNodeType] = useState<string>("character");
@@ -402,34 +398,11 @@ export function KnowledgeGraph({
     [supabase]
   );
 
-  // Handle node click (single selection without modifier keys)
+  // Handle node click
   const onNodeClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      // Don't handle if multi-select key is held (let React Flow handle it)
-      if (event.ctrlKey || event.metaKey || event.shiftKey) {
-        return;
-      }
+    (_: React.MouseEvent, node: Node) => {
       const storyNode = initialNodes.find((n) => n.id === node.id);
       setSelectedNode(storyNode || null);
-      setSelectedNodes([]); // Clear multi-selection on single click
-    },
-    [initialNodes]
-  );
-
-  // Handle selection change (marquee or Ctrl+click multi-select)
-  const onSelectionChange = useCallback(
-    ({ nodes: selectedFlowNodes }: OnSelectionChangeParams) => {
-      if (selectedFlowNodes.length > 1) {
-        // Multiple nodes selected: show multi-node panel
-        const storyNodes = selectedFlowNodes
-          .map((flowNode) => initialNodes.find((n) => n.id === flowNode.id))
-          .filter((n): n is StoryNode => n !== undefined);
-        setSelectedNodes(storyNodes);
-        setSelectedNode(null); // Clear single selection panel
-      } else {
-        // 0 or 1 nodes: clear multi-selection (let click handler manage single selection)
-        setSelectedNodes([]);
-      }
     },
     [initialNodes]
   );
@@ -589,13 +562,8 @@ export function KnowledgeGraph({
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
-        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        selectionOnDrag
-        selectionMode={SelectionMode.Partial}
-        selectionKeyCode="Shift"
-        panOnDrag
         fitView
         className="bg-muted/30"
       >
@@ -723,30 +691,15 @@ export function KnowledgeGraph({
 
         {/* Instructions */}
         <Panel position="bottom-center" className="text-xs text-muted-foreground bg-background/80 px-3 py-1 rounded">
-          Click to edit • Shift+drag to multi-select • ⌘/Ctrl+click to add • Double-click to focus
+          Click to edit • Double-click to focus • Drag to reposition • Use Organize to auto-layout
         </Panel>
       </ReactFlow>
 
-      {/* Node Detail Panel (single selection) */}
-      {selectedNode && selectedNodes.length === 0 && (
+      {/* Node Detail Panel */}
+      {selectedNode && (
         <NodeDetailPanel
           node={selectedNode}
           onClose={() => setSelectedNode(null)}
-          projectId={projectId}
-        />
-      )}
-
-      {/* Multi-Node Detail Panel (only for 2+ nodes) */}
-      {selectedNodes.length > 1 && (
-        <MultiNodeDetailPanel
-          nodes={selectedNodes}
-          edges={initialEdges}
-          allNodes={initialNodes}
-          onClose={() => setSelectedNodes([])}
-          onNodeClick={(node) => {
-            setSelectedNode(node);
-            setSelectedNodes([]);
-          }}
           projectId={projectId}
         />
       )}
