@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Loader2, Sparkles, Crown, Key, Calendar, Zap } from "lucide-react";
+import { toast } from "sonner";
 import { SUBSCRIPTION_TIERS, formatLimit, getProPricing, BillingCycle } from "@/lib/subscription/config";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +25,6 @@ interface BillingSettingsProps {
 
 export function BillingSettings({ profile }: BillingSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>("annual");
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
@@ -44,31 +44,30 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
         body: JSON.stringify({ billingCycle: cycle }),
       });
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to start checkout");
+      }
+
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to start checkout",
+        { duration: 5000 }
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleManageBilling = async () => {
-    setIsPortalLoading(true);
-    try {
-      const response = await fetch("/api/stripe/portal", {
-        method: "POST",
-      });
-      const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (error) {
-      console.error("Error creating portal session:", error);
-    } finally {
-      setIsPortalLoading(false);
-    }
+  const handleManageBilling = () => {
+    // Direct link to Stripe Customer Portal
+    window.location.href = "https://billing.stripe.com/p/login/7sYcN7d5N5Qg3oibzU6EU00";
   };
 
   return (
@@ -180,11 +179,7 @@ export function BillingSettings({ profile }: BillingSettingsProps) {
             <Button
               variant="outline"
               onClick={handleManageBilling}
-              disabled={isPortalLoading}
             >
-              {isPortalLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
               Manage Billing
             </Button>
           ) : null}

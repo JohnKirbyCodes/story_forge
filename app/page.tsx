@@ -35,15 +35,15 @@ const faqItems = [
   },
   {
     question: "How much does NovelWorld cost?",
-    answer: "NovelWorld has a free tier with unlimited world-building and limited AI suggestions. Pro tier ($15/month) includes unlimited AI drafting and full revision tools. See our pricing page for details."
+    answer: "NovelWorld has a free tier limited to 1 book and 15 story elements. Pro tier ($15/month) includes unlimited books and story elements. You bring your own OpenAI API key and are responsible for your own token usage costs."
   },
   {
     question: "Is my story private?",
-    answer: "Yes. Your manuscript is encrypted at rest and in transit. Only you and your invited collaborators can access it. We never use your story for training data."
+    answer: "Yes. Your manuscript is encrypted at rest and in transit. Only you can access your content. We never use your story for training data."
   },
   {
     question: "Can I import my existing manuscript?",
-    answer: "Yes. NovelWorld accepts .docx, .txt, and .md files. It analyzes your manuscript and automatically extracts characters, locations, and events to build your initial knowledge graph. You refine from there."
+    answer: "Not currently. Manuscript import is on our roadmap. For now, you can copy and paste your text into scenes and manually create your story elements in the knowledge graph."
   },
   {
     question: "How does the AI avoid repetitive suggestions?",
@@ -51,7 +51,7 @@ const faqItems = [
   },
   {
     question: "Can I collaborate with other writers?",
-    answer: "Yes. You can invite co-authors to your project. You can assign separate books/manuscripts within the same world. Co-authors see the shared knowledge graph and can draft simultaneously without stepping on each other's work."
+    answer: "Not currently. NovelWorld is designed for individual writers. Multi-user collaboration is on our roadmap for a future release."
   },
   {
     question: "Is there a word limit?",

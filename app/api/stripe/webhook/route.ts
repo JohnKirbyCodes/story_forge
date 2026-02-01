@@ -50,20 +50,31 @@ export async function POST(request: Request) {
           ? await stripe.subscriptions.retrieve(session.subscription as string)
           : null;
         const userId = subscription?.metadata.supabase_user_id || session.metadata?.supabase_user_id;
-        const billingCycle = subscription?.metadata.billing_cycle || "monthly";
+        const customerId = session.customer as string;
 
         if (userId) {
+          // Update by user ID
           await supabase
             .from("profiles")
             .update({
               subscription_tier: "pro",
-              stripe_customer_id: session.customer as string,
+              stripe_customer_id: customerId,
               stripe_subscription_id: session.subscription as string,
-              billing_cycle: billingCycle,
             })
             .eq("id", userId);
 
-          logger.info("User upgraded to Pro", { event: "checkout.session.completed", billingCycle });
+          logger.info("User upgraded to Pro via user ID", { event: "checkout.session.completed", userId });
+        } else if (customerId) {
+          // Fallback: Update by customer ID
+          await supabase
+            .from("profiles")
+            .update({
+              subscription_tier: "pro",
+              stripe_subscription_id: session.subscription as string,
+            })
+            .eq("stripe_customer_id", customerId);
+
+          logger.info("User upgraded to Pro via customer ID", { event: "checkout.session.completed", customerId });
         }
         break;
       }
@@ -71,22 +82,31 @@ export async function POST(request: Request) {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata.supabase_user_id;
+        const isActive = ["active", "trialing"].includes(subscription.status);
+        const tier = isActive ? "pro" : "free";
 
         if (userId) {
-          const isActive = ["active", "trialing"].includes(subscription.status);
-          const tier = isActive ? "pro" : "free";
-          const billingCycle = subscription.metadata.billing_cycle || "monthly";
-
           await supabase
             .from("profiles")
             .update({
               subscription_tier: tier,
               subscription_status: subscription.status,
-              billing_cycle: billingCycle,
             })
             .eq("id", userId);
 
-          logger.info("Subscription updated", { tier, status: subscription.status, billingCycle });
+          logger.info("Subscription updated via user ID", { tier, status: subscription.status });
+        } else {
+          // Fallback: find user by subscription ID
+          const customerId = subscription.customer as string;
+          await supabase
+            .from("profiles")
+            .update({
+              subscription_tier: tier,
+              subscription_status: subscription.status,
+            })
+            .eq("stripe_customer_id", customerId);
+
+          logger.info("Subscription updated via customer ID", { tier, status: subscription.status });
         }
         break;
       }

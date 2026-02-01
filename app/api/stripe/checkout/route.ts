@@ -57,8 +57,16 @@ export async function POST(request: Request) {
 
     // Select price ID based on billing cycle
     const priceId = billingCycle === "annual"
-      ? process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID!
-      : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!;
+      ? process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID
+      : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
+
+    if (!priceId) {
+      console.error("Missing Stripe price ID for billing cycle:", billingCycle);
+      return NextResponse.json(
+        { error: `Stripe price not configured for ${billingCycle} billing` },
+        { status: 500 }
+      );
+    }
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -84,8 +92,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Error creating checkout session:", error);
+    const message = error instanceof Error ? error.message : "Failed to create checkout session";
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: message },
       { status: 500 }
     );
   }
