@@ -35,11 +35,20 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   const { data: books } = await supabase
     .from("books")
-    .select("*")
+    .select(`
+      *,
+      chapters (
+        id,
+        scenes (
+          id,
+          word_count
+        )
+      )
+    `)
     .eq("project_id", projectId)
     .order("sort_order", { ascending: true });
 
-  const { data: nodeCount } = await supabase
+  const { count: nodeCount } = await supabase
     .from("story_nodes")
     .select("id", { count: "exact", head: true })
     .eq("project_id", projectId);
@@ -82,7 +91,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{nodeCount?.length || 0}</div>
+            <div className="text-2xl font-bold">{nodeCount || 0}</div>
           </CardContent>
         </Card>
         <Card>
@@ -93,7 +102,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {books?.reduce((sum, b) => sum + (b.current_word_count || 0), 0).toLocaleString() || 0}
+              {books?.reduce((bookSum, book) =>
+                bookSum + (book.chapters?.reduce((chapterSum, chapter) =>
+                  chapterSum + (chapter.scenes?.reduce((sceneSum, scene) =>
+                    sceneSum + (scene.word_count || 0), 0) || 0), 0) || 0), 0).toLocaleString() || 0}
             </div>
           </CardContent>
         </Card>
