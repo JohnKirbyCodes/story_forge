@@ -7,6 +7,7 @@ import { PricingSection } from "@/components/shared/pricing-section";
 import { SectionTracker, TrackedCTA } from "@/components/shared/marketing-tracker";
 import { TrackedFAQAccordion } from "@/components/shared/tracked-accordion";
 import { ComparisonTable } from "@/components/shared/comparison-table";
+import { DemoButton } from "@/components/shared/demo-button";
 import {
   Zap,
   PenLine,
@@ -116,13 +117,7 @@ export default function Home() {
                       </Button>
                     </Link>
                   </TrackedCTA>
-                  <TrackedCTA location="hero" variant="secondary">
-                    <Link href="#how-it-works">
-                      <Button size="lg" variant="outline" className="h-14 px-8 text-base">
-                        Watch Demo (2 min)
-                      </Button>
-                    </Link>
-                  </TrackedCTA>
+                  <DemoButton location="hero" className="h-14 px-8 text-base" />
                 </div>
                 <p className="mt-6 text-sm text-muted-foreground">
                   No credit card required
@@ -371,13 +366,7 @@ export default function Home() {
             </div>
 
             <div className="mt-16 text-center">
-              <TrackedCTA location="how-it-works" variant="demo">
-                <Link href="#how-it-works">
-                  <Button size="lg" variant="outline">
-                    Watch 2-Minute Demo
-                  </Button>
-                </Link>
-              </TrackedCTA>
+              <DemoButton location="how-it-works" />
             </div>
           </div>
         </section>
