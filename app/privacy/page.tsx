@@ -1,111 +1,226 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
-import { BookOpen } from "lucide-react";
+import { PublicHeader } from "@/components/shared/public-header";
 
 export const metadata = {
-  title: "Privacy Policy - NovelWorld AI",
-  description: "Privacy Policy for NovelWorld AI",
+  title: "Privacy Policy - NovelWorld",
+  description: "Privacy Policy for NovelWorld",
 };
 
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">NovelWorld AI</span>
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Get Started</Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader />
 
-      {/* Main Content */}
       <main className="flex-1">
         <div className="container mx-auto px-4 py-16">
           <div className="mx-auto max-w-3xl prose prose-neutral dark:prose-invert">
             <h1>Privacy Policy</h1>
-            <p className="lead">
-              Last updated: January 2026
+            <p><strong>NovelWorld.AI</strong></p>
+            <p><strong>Last Updated:</strong> January 2026</p>
+            <p><strong>Effective Date:</strong> January 2026</p>
+
+            <hr />
+
+            <h2>Introduction</h2>
+            <p>
+              NovelWorld.AI (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our creative writing platform and AI-powered storytelling tools.
+            </p>
+            <p>
+              By accessing or using NovelWorld.AI, you agree to this Privacy Policy. If you do not agree with the terms of this policy, please do not access the platform.
             </p>
 
+            <hr />
+
             <h2>1. Information We Collect</h2>
-            <p>
-              When you use NovelWorld AI, we collect information you provide directly to us, including:
-            </p>
+
+            <h3>1.1 Information You Provide Directly</h3>
             <ul>
-              <li>Account information (name, email address)</li>
-              <li>Content you create (projects, books, characters, scenes)</li>
-              <li>Payment information (processed securely through Stripe)</li>
-              <li>Usage data and preferences</li>
+              <li><strong>Account Information:</strong> Name, email address, username, and password when you create an account</li>
+              <li><strong>Profile Information:</strong> Optional details such as profile picture, bio, or writing preferences</li>
+              <li><strong>Creative Content:</strong> Projects, books, manuscripts, characters, scenes, world-building notes, and any other content you create on our platform</li>
+              <li><strong>Payment Information:</strong> Billing details processed securely through our payment provider (we do not store complete credit card numbers)</li>
+              <li><strong>Communications:</strong> Messages you send to us, including support requests and feedback</li>
             </ul>
+
+            <h3>1.2 Information Collected Automatically</h3>
+            <ul>
+              <li><strong>Usage Data:</strong> Features accessed, actions taken, time spent on the platform, and interaction patterns</li>
+              <li><strong>Device Information:</strong> Browser type, operating system, device identifiers, and screen resolution</li>
+              <li><strong>Log Data:</strong> IP address, access times, pages viewed, and referring URLs</li>
+              <li><strong>Cookies and Similar Technologies:</strong> Information collected through cookies, pixels, and local storage to enhance your experience</li>
+            </ul>
+
+            <hr />
 
             <h2>2. How We Use Your Information</h2>
             <p>We use the information we collect to:</p>
             <ul>
-              <li>Provide, maintain, and improve our services</li>
-              <li>Process transactions and send related information</li>
-              <li>Send technical notices and support messages</li>
-              <li>Respond to your comments and questions</li>
-              <li>Develop new features and services</li>
+              <li>Provide, operate, and maintain our platform and services</li>
+              <li>Process your transactions and manage your subscription</li>
+              <li>Personalize your experience and deliver relevant features</li>
+              <li>Send transactional communications, including account confirmations, invoices, and technical notices</li>
+              <li>Respond to your inquiries, comments, and support requests</li>
+              <li>Analyze usage patterns to improve our platform and develop new features</li>
+              <li>Detect, prevent, and address technical issues, fraud, or security concerns</li>
+              <li>Comply with legal obligations and enforce our Terms of Service</li>
+              <li>Send marketing communications (with your consent, where required)</li>
             </ul>
 
-            <h2>3. AI and Your Content</h2>
+            <hr />
+
+            <h2>3. AI Features and Your Content</h2>
+
+            <h3>3.1 How AI Processes Your Content</h3>
             <p>
-              When you use our AI features, your content is processed to generate responses.
-              We do not use your creative content to train AI models. Your stories, characters,
-              and world-building remain yours.
+              When you use our AI-powered features, your content is transmitted to our AI service providers to generate responses, suggestions, and creative assistance. This processing occurs in real time to deliver the requested functionality.
             </p>
 
-            <h2>4. Data Security</h2>
+            <h3>3.2 Your Content Is Not Used for AI Training</h3>
             <p>
-              We implement appropriate security measures to protect your personal information.
-              Your data is encrypted in transit and at rest. We use industry-standard security
-              practices to safeguard your content.
+              <strong>We do not use your creative content—including your stories, characters, plots, or world-building—to train AI models.</strong> Your creative work remains yours. AI interactions are processed solely to provide the service you requested.
             </p>
 
-            <h2>5. Data Retention</h2>
+            <h3>3.3 AI-Generated Content</h3>
             <p>
-              We retain your information for as long as your account is active or as needed
-              to provide you services. You can request deletion of your account and associated
-              data at any time.
+              Content generated by AI features based on your prompts is considered part of your creative work. You retain rights to use, modify, and publish AI-assisted content in accordance with our Terms of Service.
             </p>
 
-            <h2>6. Third-Party Services</h2>
+            <hr />
+
+            <h2>4. Data Sharing and Disclosure</h2>
+            <p>We do not sell your personal information. We may share your information in the following circumstances:</p>
+
+            <h3>4.1 Service Providers</h3>
+            <p>We work with trusted third-party providers who assist in operating our platform:</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Stripe</strong></td>
+                  <td>Payment processing and subscription management</td>
+                </tr>
+                <tr>
+                  <td><strong>Supabase</strong></td>
+                  <td>Database hosting and user authentication</td>
+                </tr>
+                <tr>
+                  <td><strong>Anthropic</strong></td>
+                  <td>AI capabilities and content generation</td>
+                </tr>
+                <tr>
+                  <td><strong>Google (Gemini)</strong></td>
+                  <td>AI capabilities and content generation</td>
+                </tr>
+                <tr>
+                  <td><strong>OpenAI</strong></td>
+                  <td>AI capabilities and content generation</td>
+                </tr>
+                <tr>
+                  <td><strong>Vercel</strong></td>
+                  <td>Application hosting, deployment, and analytics</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>These providers are contractually obligated to protect your data and use it only for the purposes we specify.</p>
+
+            <h3>4.2 Legal Requirements</h3>
             <p>
-              We use trusted third-party services to help operate our platform:
+              We may disclose your information if required by law, regulation, legal process, or governmental request, or to protect the rights, property, or safety of NovelWorld.AI, our users, or others.
             </p>
+
+            <h3>4.3 Business Transfers</h3>
+            <p>
+              In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. We will notify you of any such change and your choices regarding your information.
+            </p>
+
+            <hr />
+
+            <h2>5. Data Security</h2>
+            <p>We implement industry-standard security measures to protect your information:</p>
             <ul>
-              <li>Stripe for payment processing</li>
-              <li>Supabase for data storage and authentication</li>
-              <li>Anthropic for AI capabilities</li>
-              <li>Vercel for hosting and analytics</li>
+              <li><strong>Encryption in Transit:</strong> All data transmitted between your device and our servers uses TLS/SSL encryption</li>
+              <li><strong>Encryption at Rest:</strong> Stored data is encrypted using AES-256 encryption</li>
+              <li><strong>Access Controls:</strong> Strict internal access controls limit who can access user data</li>
+              <li><strong>Regular Audits:</strong> We conduct periodic security assessments and vulnerability testing</li>
+              <li><strong>Secure Infrastructure:</strong> Our hosting providers maintain SOC 2 compliance and robust physical security</li>
             </ul>
+            <p>While we strive to protect your information, no method of transmission or storage is completely secure. We cannot guarantee absolute security.</p>
 
-            <h2>7. Your Rights</h2>
-            <p>You have the right to:</p>
+            <hr />
+
+            <h2>6. Data Retention</h2>
             <ul>
-              <li>Access your personal data</li>
-              <li>Correct inaccurate data</li>
-              <li>Request deletion of your data</li>
-              <li>Export your content</li>
-              <li>Opt out of marketing communications</li>
+              <li><strong>Active Accounts:</strong> We retain your information for as long as your account remains active and as needed to provide our services</li>
+              <li><strong>Deleted Accounts:</strong> Upon account deletion, we remove your personal information and creative content within 30 days, except where retention is required for legal, regulatory, or legitimate business purposes</li>
+              <li><strong>Backups:</strong> Residual copies in backup systems may persist for up to 90 days before being purged</li>
+              <li><strong>Anonymized Data:</strong> We may retain anonymized, aggregated data that cannot identify you for analytical purposes</li>
             </ul>
 
-            <h2>8. Contact Us</h2>
+            <hr />
+
+            <h2>7. Your Rights and Choices</h2>
+            <p>Depending on your location, you may have the following rights:</p>
+            <ul>
+              <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
+              <li><strong>Correction:</strong> Request correction of inaccurate or incomplete data</li>
+              <li><strong>Deletion:</strong> Request deletion of your account and associated data</li>
+              <li><strong>Portability:</strong> Export your creative content in a standard format</li>
+              <li><strong>Restriction:</strong> Request that we limit processing of your data in certain circumstances</li>
+              <li><strong>Objection:</strong> Object to processing based on legitimate interests</li>
+              <li><strong>Marketing Opt-Out:</strong> Unsubscribe from marketing communications at any time via the link in our emails or your account settings</li>
+            </ul>
             <p>
-              If you have questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:privacy@novelworld.ai">privacy@novelworld.ai</a>.
+              To exercise these rights, contact us at <strong><a href="mailto:privacy@novelworld.ai">privacy@novelworld.ai</a></strong>. We will respond within 30 days (or sooner where required by law).
             </p>
+
+            <hr />
+
+            <h2>8. International Data Transfers</h2>
+            <p>
+              If you access our platform from outside the United States, your information may be transferred to and processed in the United States or other countries where our service providers operate. We ensure appropriate safeguards are in place to protect your data in accordance with this Privacy Policy.
+            </p>
+
+            <hr />
+
+            <h2>9. Children&apos;s Privacy</h2>
+            <p>
+              NovelWorld.AI is not intended for children under 13 years of age (or the applicable age of digital consent in your jurisdiction). We do not knowingly collect personal information from children. If we become aware that we have collected data from a child without appropriate consent, we will take steps to delete that information promptly.
+            </p>
+
+            <hr />
+
+            <h2>10. Cookies and Tracking Technologies</h2>
+            <p>We use cookies and similar technologies to:</p>
+            <ul>
+              <li>Keep you signed in to your account</li>
+              <li>Remember your preferences and settings</li>
+              <li>Understand how you use our platform</li>
+              <li>Improve performance and functionality</li>
+            </ul>
+            <p>You can manage cookie preferences through your browser settings. Disabling certain cookies may affect platform functionality.</p>
+
+            <hr />
+
+            <h2>11. Changes to This Privacy Policy</h2>
+            <p>We may update this Privacy Policy from time to time. When we make material changes, we will:</p>
+            <ul>
+              <li>Update the &quot;Last Updated&quot; date at the top of this policy</li>
+              <li>Notify you via email or through a prominent notice on our platform</li>
+              <li>Where required by law, obtain your consent to the changes</li>
+            </ul>
+            <p>Your continued use of NovelWorld.AI after changes become effective constitutes acceptance of the revised policy.</p>
+
+            <hr />
+
+            <h2>12. Contact Us</h2>
+            <p>If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+            <p><strong>Email:</strong> <a href="mailto:privacy@novelworld.ai">privacy@novelworld.ai</a></p>
+            <p>We aim to respond to all inquiries within 30 days.</p>
           </div>
         </div>
       </main>

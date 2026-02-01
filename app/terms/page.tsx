@@ -1,129 +1,335 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
-import { BookOpen } from "lucide-react";
+import { PublicHeader } from "@/components/shared/public-header";
 
 export const metadata = {
-  title: "Terms of Service - NovelWorld AI",
-  description: "Terms of Service for NovelWorld AI",
+  title: "Terms of Service - NovelWorld",
+  description: "Terms of Service for NovelWorld",
 };
 
 export default function TermsPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6" />
-            <span className="text-xl font-bold">NovelWorld AI</span>
-          </Link>
-          <nav className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/signup">
-              <Button>Get Started</Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader />
 
-      {/* Main Content */}
       <main className="flex-1">
         <div className="container mx-auto px-4 py-16">
           <div className="mx-auto max-w-3xl prose prose-neutral dark:prose-invert">
             <h1>Terms of Service</h1>
-            <p className="lead">
-              Last updated: January 2026
+            <p><strong>NovelWorld.AI</strong></p>
+            <p><strong>Last Updated:</strong> January 2026</p>
+            <p><strong>Effective Date:</strong> January 2026</p>
+
+            <hr />
+
+            <h2>Introduction</h2>
+            <p>
+              These Terms of Service (&quot;Terms&quot;) govern your access to and use of NovelWorld.AI (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), including our website, applications, and AI-powered creative writing tools (collectively, the &quot;Service&quot;).
+            </p>
+            <p>
+              By creating an account or using the Service, you agree to be bound by these Terms. If you do not agree, do not access or use the Service.
             </p>
 
-            <h2>1. Acceptance of Terms</h2>
+            <hr />
+
+            <h2>1. Eligibility</h2>
+            <p>To use NovelWorld.AI, you must:</p>
+            <ul>
+              <li>Be at least 13 years of age (or the minimum age of digital consent in your jurisdiction)</li>
+              <li>Have the legal capacity to enter into a binding agreement</li>
+              <li>Not be prohibited from using the Service under applicable laws</li>
+            </ul>
             <p>
-              By accessing or using NovelWorld AI, you agree to be bound by these Terms of Service.
-              If you do not agree to these terms, please do not use our service.
+              If you are using the Service on behalf of an organization, you represent that you have authority to bind that organization to these Terms.
             </p>
+
+            <hr />
 
             <h2>2. Description of Service</h2>
-            <p>
-              NovelWorld AI is a novel writing platform that provides tools for story planning,
-              character development, world-building, and AI-assisted prose generation.
-            </p>
+            <p>NovelWorld.AI is a creative writing platform that provides tools for:</p>
+            <ul>
+              <li>Story planning and outlining</li>
+              <li>Character development and management</li>
+              <li>World-building and lore organization</li>
+              <li>AI-assisted prose generation and editing</li>
+              <li>Project organization and manuscript management</li>
+            </ul>
+            <p>We may add, modify, or discontinue features at our discretion with reasonable notice to users.</p>
+
+            <hr />
 
             <h2>3. User Accounts</h2>
+
+            <h3>3.1 Account Creation</h3>
             <p>
-              To use certain features, you must create an account. You are responsible for:
+              To access certain features, you must create an account with accurate and complete information. You agree to update your information as necessary to keep it current.
             </p>
+
+            <h3>3.2 Account Security</h3>
+            <p>You are responsible for:</p>
             <ul>
-              <li>Maintaining the confidentiality of your account credentials</li>
+              <li>Maintaining the confidentiality of your login credentials</li>
               <li>All activities that occur under your account</li>
-              <li>Notifying us immediately of any unauthorized use</li>
+              <li>Notifying us immediately at support@novelworld.ai if you suspect unauthorized access</li>
             </ul>
+            <p>We are not liable for any loss or damage arising from your failure to protect your account credentials.</p>
 
-            <h2>4. Content Ownership</h2>
+            <h3>3.3 Account Termination</h3>
             <p>
-              You retain full ownership of all content you create using NovelWorld AI, including
-              but not limited to stories, characters, outlines, and world-building materials.
-              We claim no intellectual property rights over your creative content.
+              You may delete your account at any time through your account settings. We reserve the right to suspend or terminate accounts that violate these Terms, with or without notice depending on the severity of the violation.
             </p>
 
-            <h2>5. AI-Generated Content</h2>
+            <hr />
+
+            <h2>4. Content Ownership and Intellectual Property</h2>
+
+            <h3>4.1 Your Content</h3>
             <p>
-              Content generated by our AI features is provided as a creative tool. You are
-              responsible for reviewing and editing AI-generated content. You own the rights
-              to AI-generated content created through your use of the service.
+              You retain full ownership of all content you create using NovelWorld.AI, including stories, characters, outlines, world-building materials, and any other creative work (&quot;User Content&quot;). We claim no intellectual property rights over your User Content.
             </p>
 
-            <h2>6. Acceptable Use</h2>
+            <h3>4.2 License to Operate the Service</h3>
+            <p>
+              By uploading or creating User Content on the Service, you grant us a limited, non-exclusive license to store, process, and display your content solely for the purpose of providing and improving the Service. This license terminates when you delete your content or account.
+            </p>
+
+            <h3>4.3 AI-Generated Content</h3>
+            <p>
+              Content generated by our AI features based on your prompts and inputs is considered part of your creative work. You own the rights to use, modify, publish, and commercialize AI-generated content created through your use of the Service, subject to Section 5 below.
+            </p>
+
+            <h3>4.4 Our Intellectual Property</h3>
+            <p>
+              The Service, including its design, features, code, trademarks, and underlying technology, is owned by NovelWorld.AI and protected by intellectual property laws. These Terms do not grant you any rights to our intellectual property except the limited right to use the Service as intended.
+            </p>
+
+            <hr />
+
+            <h2>5. AI Features and Responsible Use</h2>
+
+            <h3>5.1 Nature of AI-Generated Content</h3>
+            <p>
+              AI-generated content is provided as a creative tool to assist your writing process. AI outputs may contain errors, inconsistencies, or unintended content. You are solely responsible for reviewing, editing, and verifying all AI-generated content before use or publication.
+            </p>
+
+            <h3>5.2 No Guarantees</h3>
+            <p>
+              We do not guarantee that AI-generated content will be original, accurate, suitable for any particular purpose, or free from similarities to existing works. You assume all risk associated with your use of AI-generated content.
+            </p>
+
+            <h3>5.3 Your Responsibility</h3>
+            <p>
+              You are responsible for ensuring that your use of AI-generated content complies with applicable laws and does not infringe third-party rights.
+            </p>
+
+            <hr />
+
+            <h2>6. Acceptable Use Policy</h2>
+
+            <h3>6.1 Prohibited Conduct</h3>
             <p>You agree not to:</p>
             <ul>
-              <li>Use the service for any illegal purpose</li>
-              <li>Generate content that violates others&apos; rights</li>
-              <li>Attempt to circumvent usage limits or security measures</li>
-              <li>Share your account credentials with others</li>
-              <li>Use automated systems to access the service without permission</li>
+              <li>Use the Service for any unlawful purpose or to promote illegal activities</li>
+              <li>Generate content that exploits, harms, or endangers minors</li>
+              <li>Create content intended to harass, threaten, defame, or incite violence against any person or group</li>
+              <li>Generate content that infringes the intellectual property rights of others</li>
+              <li>Attempt to circumvent usage limits, access controls, or security measures</li>
+              <li>Use automated systems, bots, or scripts to access the Service without prior written permission</li>
+              <li>Share, sell, or transfer your account credentials to others</li>
+              <li>Reverse engineer, decompile, or attempt to extract the source code of the Service</li>
+              <li>Interfere with or disrupt the integrity or performance of the Service</li>
+              <li>Misrepresent your identity or affiliation with any person or entity</li>
             </ul>
 
-            <h2>7. Subscription and Payments</h2>
+            <h3>6.2 Content Standards</h3>
+            <p>While we support creative freedom, content created on the Service must not:</p>
+            <ul>
+              <li>Depict sexual content involving minors</li>
+              <li>Provide instructions for creating weapons, explosives, or dangerous substances</li>
+              <li>Constitute or promote fraud, phishing, or other deceptive practices</li>
+            </ul>
+
+            <h3>6.3 Enforcement</h3>
             <p>
-              Some features require a paid subscription. By subscribing, you agree to:
+              We reserve the right to remove content and suspend or terminate accounts that violate this Acceptable Use Policy, at our sole discretion.
+            </p>
+
+            <hr />
+
+            <h2>7. Subscriptions and Payments</h2>
+
+            <h3>7.1 Subscription Plans</h3>
+            <p>
+              Certain features require a paid subscription. Available plans and pricing are described on our website and may change with reasonable notice.
+            </p>
+
+            <h3>7.2 Billing</h3>
+            <p>By subscribing, you agree to:</p>
+            <ul>
+              <li>Pay all applicable fees at the rates in effect when charges are incurred</li>
+              <li>Provide accurate and complete billing information</li>
+              <li>Authorize us to charge your designated payment method</li>
+            </ul>
+
+            <h3>7.3 Automatic Renewal</h3>
+            <p>
+              Subscriptions automatically renew at the end of each billing period unless you cancel before the renewal date. You may cancel at any time through your account settings; cancellation takes effect at the end of the current billing period.
+            </p>
+
+            <h3>7.4 Price Changes</h3>
+            <p>
+              We may change subscription prices with at least 30 days&apos; notice. Price changes take effect at the start of your next billing period following the notice.
+            </p>
+
+            <h3>7.5 Taxes</h3>
+            <p>
+              You are responsible for any applicable taxes associated with your subscription, unless otherwise stated.
+            </p>
+
+            <hr />
+
+            <h2>8. Refunds and Cancellations</h2>
+
+            <h3>8.1 Refund Policy</h3>
+            <p>
+              Refund requests are evaluated on a case-by-case basis. To request a refund, contact us at support@novelworld.ai within 14 days of the charge in question.
+            </p>
+
+            <h3>8.2 Cancellation</h3>
+            <p>When you cancel your subscription:</p>
+            <ul>
+              <li>You retain access to paid features until the end of your current billing period</li>
+              <li>Your account reverts to the free tier (if available) or becomes inactive</li>
+              <li>Your content remains accessible unless you choose to delete your account</li>
+            </ul>
+
+            <hr />
+
+            <h2>9. Service Availability and Modifications</h2>
+
+            <h3>9.1 Availability</h3>
+            <p>
+              We strive to maintain high availability but do not guarantee uninterrupted or error-free service. The Service may be temporarily unavailable due to maintenance, updates, or circumstances beyond our control.
+            </p>
+
+            <h3>9.2 Modifications</h3>
+            <p>
+              We may modify, update, or discontinue features of the Service at any time. For material changes that negatively affect your use, we will provide reasonable advance notice where practicable.
+            </p>
+
+            <h3>9.3 Data Portability</h3>
+            <p>
+              You may export your content at any time using the export features available in your account.
+            </p>
+
+            <hr />
+
+            <h2>10. Disclaimers</h2>
+            <p>
+              THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR THAT THE SERVICE WILL BE UNINTERRUPTED OR ERROR-FREE.
+            </p>
+            <p>
+              WE DO NOT WARRANT THAT AI-GENERATED CONTENT WILL BE ACCURATE, COMPLETE, ORIGINAL, OR SUITABLE FOR ANY PARTICULAR PURPOSE.
+            </p>
+
+            <hr />
+
+            <h2>11. Limitation of Liability</h2>
+            <p>
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, NOVELWORLD.AI AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS SHALL NOT BE LIABLE FOR:
             </p>
             <ul>
-              <li>Pay the applicable fees as described at the time of purchase</li>
-              <li>Automatic renewal unless cancelled before the renewal date</li>
-              <li>Provide accurate billing information</li>
+              <li>ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES</li>
+              <li>ANY LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS OPPORTUNITIES</li>
+              <li>ANY DAMAGES ARISING FROM YOUR USE OF OR INABILITY TO USE THE SERVICE</li>
+              <li>ANY DAMAGES ARISING FROM AI-GENERATED CONTENT</li>
+            </ul>
+            <p>
+              OUR TOTAL LIABILITY FOR ANY CLAIMS ARISING FROM THESE TERMS OR YOUR USE OF THE SERVICE SHALL NOT EXCEED THE AMOUNT YOU PAID US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+            </p>
+            <p>
+              SOME JURISDICTIONS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR EXCLUSION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS OR LIMITATIONS MAY NOT APPLY.
+            </p>
+
+            <hr />
+
+            <h2>12. Indemnification</h2>
+            <p>
+              You agree to indemnify, defend, and hold harmless NovelWorld.AI and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorneys&apos; fees) arising from:
+            </p>
+            <ul>
+              <li>Your use of the Service</li>
+              <li>Your User Content</li>
+              <li>Your violation of these Terms</li>
+              <li>Your violation of any third-party rights</li>
             </ul>
 
-            <h2>8. Refunds</h2>
+            <hr />
+
+            <h2>13. Dispute Resolution</h2>
+
+            <h3>13.1 Informal Resolution</h3>
             <p>
-              Refund requests are handled on a case-by-case basis. Contact support within
-              7 days of purchase if you are unsatisfied with the service.
+              Before filing any formal dispute, you agree to contact us at legal@novelworld.ai and attempt to resolve the dispute informally for at least 30 days.
             </p>
 
-            <h2>9. Service Availability</h2>
+            <h3>13.2 Governing Law</h3>
             <p>
-              We strive to maintain high availability but do not guarantee uninterrupted
-              service. We may modify or discontinue features with reasonable notice.
+              These Terms are governed by the laws of the State of Delaware, United States, without regard to conflict of law principles.
             </p>
 
-            <h2>10. Limitation of Liability</h2>
+            <h3>13.3 Jurisdiction</h3>
             <p>
-              NovelWorld AI is provided &quot;as is&quot; without warranties of any kind. We are not
-              liable for any indirect, incidental, or consequential damages arising from
-              your use of the service.
+              Any disputes not resolved informally shall be subject to the exclusive jurisdiction of the state and federal courts located in Delaware.
             </p>
 
-            <h2>11. Changes to Terms</h2>
+            <hr />
+
+            <h2>14. Changes to These Terms</h2>
+            <p>We may update these Terms from time to time. When we make material changes:</p>
+            <ul>
+              <li>We will update the &quot;Last Updated&quot; date at the top of these Terms</li>
+              <li>We will notify you via email or through a prominent notice on the Service</li>
+              <li>Where required by law, we will obtain your consent</li>
+            </ul>
             <p>
-              We may update these terms from time to time. Continued use of the service
-              after changes constitutes acceptance of the new terms.
+              Your continued use of the Service after changes become effective constitutes acceptance of the revised Terms. If you do not agree to the changes, you must stop using the Service.
             </p>
 
-            <h2>12. Contact</h2>
+            <hr />
+
+            <h2>15. General Provisions</h2>
+
+            <h3>15.1 Entire Agreement</h3>
             <p>
-              Questions about these Terms of Service can be directed to{" "}
-              <a href="mailto:legal@novelworld.ai">legal@novelworld.ai</a>.
+              These Terms, together with our Privacy Policy, constitute the entire agreement between you and NovelWorld.AI regarding the Service.
             </p>
+
+            <h3>15.2 Severability</h3>
+            <p>
+              If any provision of these Terms is found unenforceable, the remaining provisions will continue in full force and effect.
+            </p>
+
+            <h3>15.3 Waiver</h3>
+            <p>
+              Our failure to enforce any right or provision of these Terms does not constitute a waiver of that right or provision.
+            </p>
+
+            <h3>15.4 Assignment</h3>
+            <p>
+              You may not assign or transfer these Terms without our prior written consent. We may assign our rights and obligations without restriction.
+            </p>
+
+            <h3>15.5 Notices</h3>
+            <p>
+              We may provide notices to you via email, through the Service, or by posting on our website. Notices to us should be sent to legal@novelworld.ai.
+            </p>
+
+            <hr />
+
+            <h2>16. Contact Us</h2>
+            <p>If you have questions about these Terms of Service, please contact us:</p>
+            <p><strong>Email:</strong> <a href="mailto:legal@novelworld.ai">legal@novelworld.ai</a></p>
+            <p>We aim to respond to all inquiries within 30 days.</p>
           </div>
         </div>
       </main>
