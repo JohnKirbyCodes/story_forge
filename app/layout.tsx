@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Lora, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -124,6 +125,7 @@ export default function RootLayout({
         className={`${inter.variable} ${lora.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <Toaster position="top-center" richColors />
         <Analytics />
       </body>
     </html>

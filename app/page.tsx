@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
 import { PublicHeader } from "@/components/shared/public-header";
@@ -8,6 +7,7 @@ import { SectionTracker, TrackedCTA } from "@/components/shared/marketing-tracke
 import { TrackedFAQAccordion } from "@/components/shared/tracked-accordion";
 import { ComparisonTable } from "@/components/shared/comparison-table";
 import { DemoButton } from "@/components/shared/demo-button";
+import { ClickablePreview } from "@/components/shared/clickable-preview";
 import {
   Zap,
   PenLine,
@@ -124,15 +124,11 @@ export default function Home() {
                 </p>
               </div>
               <div className="rounded-2xl border bg-card p-4 shadow-lg">
-                <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
-                  <Image
-                    src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
-                    alt="NovelWorld knowledge graph showing character relationships and plot connections"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+                <ClickablePreview
+                  src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
+                  alt="NovelWorld knowledge graph showing character relationships and plot connections"
+                  priority
+                />
                 <p className="mt-3 text-center text-sm text-muted-foreground">
                   NovelWorld knowledge graph showing character relationships and plot connections
                 </p>
@@ -284,28 +280,20 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
-                    <Image
-                      src={`${STORAGE_BASE}/NovelWorld-NodeDetails.png`}
-                      alt="Creating detailed character and story nodes"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <ClickablePreview
+                    src={`${STORAGE_BASE}/NovelWorld-NodeDetails.png`}
+                    alt="Creating detailed character and story nodes"
+                  />
                 </div>
               </div>
 
               {/* Step 2 */}
               <div className="grid items-center gap-8 md:grid-cols-2">
                 <div className="order-2 md:order-1 rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
-                    <Image
-                      src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
-                      alt="Story universe graph showing connected relationships"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <ClickablePreview
+                    src={`${STORAGE_BASE}/NovelWorld-StoryUniverse.png`}
+                    alt="Story universe graph showing connected relationships"
+                  />
                 </div>
                 <div className="order-1 md:order-2">
                   <div className="mb-4 text-6xl font-bold text-primary/20">2</div>
@@ -330,28 +318,20 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
-                    <Image
-                      src={`${STORAGE_BASE}/NovelWorld-BookSceneWritingEditor.png`}
-                      alt="Scene writing editor with AI assistance"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <ClickablePreview
+                    src={`${STORAGE_BASE}/NovelWorld-BookSceneWritingEditor.png`}
+                    alt="Scene writing editor with AI assistance"
+                  />
                 </div>
               </div>
 
               {/* Step 4 */}
               <div className="grid items-center gap-8 md:grid-cols-2">
                 <div className="order-2 md:order-1 rounded-xl border bg-background p-4">
-                  <div className="aspect-video rounded-lg bg-muted overflow-hidden relative">
-                    <Image
-                      src={`${STORAGE_BASE}/NovelWorld-AIProseEditor.png`}
-                      alt="AI-powered prose editing and refinement"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                  <ClickablePreview
+                    src={`${STORAGE_BASE}/NovelWorld-AIProseEditor.png`}
+                    alt="AI-powered prose editing and refinement"
+                  />
                 </div>
                 <div className="order-1 md:order-2">
                   <div className="mb-4 text-6xl font-bold text-primary/20">4</div>
