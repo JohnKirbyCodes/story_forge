@@ -124,16 +124,16 @@ export async function trackAIUsage(params: AIUsageParams): Promise<void> {
 
 /**
  * Helper to extract usage from Vercel AI SDK result
- * Handles both AI SDK v5 and v6 property names
+ * Handles both AI SDK v4 (promptTokens/completionTokens) and v5+ (inputTokens/outputTokens)
  */
 export function extractUsageFromResult(result: {
   usage?: Record<string, unknown>;
 }): { inputTokens: number; outputTokens: number } {
   const usage = result.usage || {};
   return {
-    // v6 uses promptTokens/completionTokens
-    inputTokens: (usage.promptTokens as number) || 0,
-    outputTokens: (usage.completionTokens as number) || 0,
+    // Support both naming conventions: v5+ uses inputTokens/outputTokens, v4 used promptTokens/completionTokens
+    inputTokens: (usage.inputTokens as number) || (usage.promptTokens as number) || 0,
+    outputTokens: (usage.outputTokens as number) || (usage.completionTokens as number) || 0,
   };
 }
 

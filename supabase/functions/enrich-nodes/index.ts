@@ -386,6 +386,33 @@ Response format (JSON only):
 
     console.log(`Updated ${updatedCount}/${nodes.length} nodes`);
 
+    // Track AI usage in the database
+    const inputTokens = message.usage.input_tokens;
+    const outputTokens = message.usage.output_tokens;
+
+    // Calculate cost (Claude Sonnet 4: $3/1M input, $15/1M output)
+    const inputCostCents = (inputTokens / 1_000_000) * 3 * 100;
+    const outputCostCents = (outputTokens / 1_000_000) * 15 * 100;
+
+    const { error: usageError } = await adminSupabase
+      .from("ai_usage")
+      .insert({
+        user_id: user.id,
+        project_id: projectId,
+        endpoint: "enrich-nodes",
+        model: "anthropic:claude-sonnet-4-20250514",
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        input_cost_cents: inputCostCents,
+        output_cost_cents: outputCostCents,
+        request_duration_ms: durationMs,
+        status: "success",
+      });
+
+    if (usageError) {
+      console.error("Failed to track AI usage:", usageError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
