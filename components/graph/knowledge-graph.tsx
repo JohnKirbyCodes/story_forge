@@ -419,18 +419,14 @@ export function KnowledgeGraph({
   // Handle selection change (marquee or Ctrl+click multi-select)
   const onSelectionChange = useCallback(
     ({ nodes: selectedFlowNodes }: OnSelectionChangeParams) => {
-      if (selectedFlowNodes.length > 1) {
-        // Multi-selection: show multi-node panel
+      if (selectedFlowNodes.length > 0) {
+        // Any marquee/ctrl+click selection: show multi-node panel
+        // (even for single node - user can click "Open Full Editor" if needed)
         const storyNodes = selectedFlowNodes
           .map((flowNode) => initialNodes.find((n) => n.id === flowNode.id))
           .filter((n): n is StoryNode => n !== undefined);
         setSelectedNodes(storyNodes);
-        setSelectedNode(null); // Clear single selection
-      } else if (selectedFlowNodes.length === 1) {
-        // Single selection via marquee: treat as normal click
-        const storyNode = initialNodes.find((n) => n.id === selectedFlowNodes[0].id);
-        setSelectedNode(storyNode || null);
-        setSelectedNodes([]);
+        setSelectedNode(null); // Clear single selection panel
       } else {
         // No selection
         setSelectedNodes([]);
@@ -741,8 +737,8 @@ export function KnowledgeGraph({
         />
       )}
 
-      {/* Multi-Node Detail Panel (multiple selection) */}
-      {selectedNodes.length > 1 && (
+      {/* Multi-Node Detail Panel (marquee/ctrl+click selection) */}
+      {selectedNodes.length >= 1 && (
         <MultiNodeDetailPanel
           nodes={selectedNodes}
           edges={initialEdges}
