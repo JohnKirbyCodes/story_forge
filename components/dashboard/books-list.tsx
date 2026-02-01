@@ -4,13 +4,12 @@ import Link from "next/link";
 import { Book } from "@/types/database";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, FileText } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 interface BooksListProps {
   books: Book[];
@@ -64,34 +63,6 @@ export function BooksList({ books, projectId }: BooksListProps) {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <FileText className="h-4 w-4" />
-                  <span>
-                    {(book.current_word_count || 0).toLocaleString()} words
-                  </span>
-                </div>
-                {book.target_word_count && (
-                  <span>
-                    / {book.target_word_count.toLocaleString()} target
-                  </span>
-                )}
-              </div>
-              {book.target_word_count && book.current_word_count && (
-                <div className="mt-2 h-2 w-full rounded-full bg-muted">
-                  <div
-                    className="h-2 rounded-full bg-primary transition-all"
-                    style={{
-                      width: `${Math.min(
-                        (book.current_word_count / book.target_word_count) * 100,
-                        100
-                      )}%`,
-                    }}
-                  />
-                </div>
-              )}
-            </CardContent>
           </Card>
         </Link>
       ))}
