@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Settings, Key } from "lucide-react";
+import { LogOut, Settings, Key, CreditCard } from "lucide-react";
 
 interface DashboardHeaderProps {
   user: User;
@@ -102,6 +102,18 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
             >
               <Settings className="mr-2 h-4 w-4" />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => router.push("/dashboard/settings/ai")}
+            >
+              <Key className="mr-2 h-4 w-4" />
+              AI Keys
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => router.push("/dashboard/settings/billing")}
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Billing
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
