@@ -23,7 +23,7 @@ export function DashboardSidebar() {
   return (
     <aside className="hidden w-64 flex-shrink-0 border-r bg-background md:flex md:flex-col">
       <div className="flex h-16 items-center border-b px-6">
-        <span className="text-lg font-bold">NovelWorld</span>
+        <span className="text-lg font-bold font-serif">NovelWorld</span>
       </div>
       <nav className="flex flex-col gap-1 p-4 flex-1">
         {navigation.map((item) => {
