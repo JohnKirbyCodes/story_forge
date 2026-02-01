@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
 import { PublicHeader } from "@/components/shared/public-header";
 import { PricingSection } from "@/components/shared/pricing-section";
+import { SectionTracker, TrackedCTA } from "@/components/shared/marketing-tracker";
+import { TrackedFAQAccordion } from "@/components/shared/tracked-accordion";
+import { ComparisonTable } from "@/components/shared/comparison-table";
 import {
   Zap,
   PenLine,
@@ -11,20 +14,12 @@ import {
   Target,
   ChevronRight,
   Check,
-  X,
-  AlertTriangle,
   Star,
   Globe,
   Quote,
 } from "lucide-react";
 
 const STORAGE_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/NovelWorld_PublicAssets`;
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 const faqItems = [
   {
@@ -90,13 +85,14 @@ export default function Home() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-24 lg:py-32">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-              <div>
-                <h1 className="font-serif text-5xl font-normal leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-                  Build Fictional Worlds with Intelligence
-                </h1>
+        <SectionTracker sectionId="hero">
+          <section className="relative overflow-hidden py-24 lg:py-32">
+            <div className="container mx-auto px-4">
+              <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+                <div>
+                  <h1 className="font-serif text-5xl font-normal leading-tight tracking-tight sm:text-6xl lg:text-7xl">
+                    Build Fictional Worlds with Intelligence
+                  </h1>
                 <p className="mt-8 max-w-xl text-xl leading-relaxed text-muted-foreground">
                   NovelWorld&apos;s AI-powered knowledge graph helps you organize characters,
                   plot dependencies, and story structure in one intelligent workspace.
@@ -112,17 +108,21 @@ export default function Home() {
                   </span>
                 </div>
                 <div className="mt-10 flex flex-col items-start gap-4 sm:flex-row">
-                  <Link href="/signup">
-                    <Button size="lg" className="h-14 px-8 text-base shadow-lg hover:shadow-xl transition-shadow">
-                      Start Free Trial
-                      <ChevronRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="#how-it-works">
-                    <Button size="lg" variant="outline" className="h-14 px-8 text-base">
-                      Watch Demo (2 min)
-                    </Button>
-                  </Link>
+                  <TrackedCTA location="hero" variant="primary">
+                    <Link href="/signup">
+                      <Button size="lg" className="h-14 px-8 text-base shadow-lg hover:shadow-xl transition-shadow">
+                        Start Free Trial
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </TrackedCTA>
+                  <TrackedCTA location="hero" variant="secondary">
+                    <Link href="#how-it-works">
+                      <Button size="lg" variant="outline" className="h-14 px-8 text-base">
+                        Watch Demo (2 min)
+                      </Button>
+                    </Link>
+                  </TrackedCTA>
                 </div>
                 <p className="mt-6 text-sm text-muted-foreground">
                   No credit card required
@@ -145,50 +145,54 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </SectionTracker>
 
         {/* Pain Point Section */}
-        <section className="border-y bg-card py-20">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl text-center">
-              <h2 className="font-serif text-3xl leading-tight sm:text-4xl">
-                Why Most Fiction Writers Struggle
-              </h2>
+        <SectionTracker sectionId="pain-points">
+          <section className="border-y bg-card py-20">
+            <div className="container mx-auto px-4">
+              <div className="mx-auto max-w-3xl text-center">
+                <h2 className="font-serif text-3xl leading-tight sm:text-4xl">
+                  Why Most Fiction Writers Struggle
+                </h2>
+              </div>
+
+              <div className="mx-auto mt-12 grid max-w-5xl gap-8 md:grid-cols-3">
+                <div className="rounded-xl border bg-background p-6">
+                  <h3 className="text-lg font-semibold">Scattered Story Information</h3>
+                  <p className="mt-3 text-muted-foreground">
+                    Characters scattered across Google Docs. Plot notes in random notebooks.
+                    Relationship details you can&apos;t find when you need them. Your story world
+                    lives in fragments.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border bg-background p-6">
+                  <h3 className="text-lg font-semibold">Inconsistent Details Break Immersion</h3>
+                  <p className="mt-3 text-muted-foreground">
+                    A character&apos;s age changes in Chapter 15. Locations shift. Timeline
+                    inconsistencies readers catch that you missed. These breaks destroy
+                    reader trust and your credibility.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border bg-background p-6">
+                  <h3 className="text-lg font-semibold">Plotting Without Context</h3>
+                  <p className="mt-3 text-muted-foreground">
+                    How does this plot point affect that character&apos;s goal? Where&apos;s the
+                    connection between events? Without seeing your story as a web of
+                    relationships, you miss opportunities for deeper stories.
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <div className="mx-auto mt-12 grid max-w-5xl gap-8 md:grid-cols-3">
-              <div className="rounded-xl border bg-background p-6">
-                <h3 className="text-lg font-semibold">Scattered Story Information</h3>
-                <p className="mt-3 text-muted-foreground">
-                  Characters scattered across Google Docs. Plot notes in random notebooks.
-                  Relationship details you can&apos;t find when you need them. Your story world
-                  lives in fragments.
-                </p>
-              </div>
-
-              <div className="rounded-xl border bg-background p-6">
-                <h3 className="text-lg font-semibold">Inconsistent Details Break Immersion</h3>
-                <p className="mt-3 text-muted-foreground">
-                  A character&apos;s age changes in Chapter 15. Locations shift. Timeline
-                  inconsistencies readers catch that you missed. These breaks destroy
-                  reader trust and your credibility.
-                </p>
-              </div>
-
-              <div className="rounded-xl border bg-background p-6">
-                <h3 className="text-lg font-semibold">Plotting Without Context</h3>
-                <p className="mt-3 text-muted-foreground">
-                  How does this plot point affect that character&apos;s goal? Where&apos;s the
-                  connection between events? Without seeing your story as a web of
-                  relationships, you miss opportunities for deeper stories.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        </SectionTracker>
 
         {/* Solution Section */}
-        <section id="features" className="py-24 lg:py-32">
-          <div className="container mx-auto px-4">
+        <SectionTracker sectionId="features">
+          <section id="features" className="py-24 lg:py-32">
+            <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">
                 The NovelWorld Difference
@@ -254,116 +258,15 @@ export default function Home() {
             </div>
 
             {/* Comparison Table */}
-            <div className="mx-auto mt-16 max-w-4xl overflow-x-auto">
-              <table className="w-full border-collapse rounded-lg border">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="border p-4 text-left font-semibold">Feature</th>
-                    <th className="border p-4 text-center font-semibold">NovelWorld</th>
-                    <th className="border p-4 text-center font-semibold">ChatGPT/Generic AI</th>
-                    <th className="border p-4 text-center font-semibold">Other AI Writing Tools</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border p-4">Story Context Memory</td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Full story world model
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-red-500">
-                        <X className="h-4 w-4" /> Session-only
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-yellow-600">
-                        <AlertTriangle className="h-4 w-4" /> Limited
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="bg-muted/30">
-                    <td className="border p-4">Character Consistency</td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Enforced across draft
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-red-500">
-                        <X className="h-4 w-4" /> None
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-yellow-600">
-                        <AlertTriangle className="h-4 w-4" /> Limited
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border p-4">Relationship Mapping</td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Visual knowledge graph
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-red-500">
-                        <X className="h-4 w-4" /> Not available
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-red-500">
-                        <X className="h-4 w-4" /> Not available
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="bg-muted/30">
-                    <td className="border p-4">Plot Dependency Detection</td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Intelligent connections
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-red-500">
-                        <X className="h-4 w-4" /> None
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-yellow-600">
-                        <AlertTriangle className="h-4 w-4" /> Limited
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border p-4">Pricing</td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Free tier available
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-green-600">
-                        <Check className="h-4 w-4" /> Free tier available
-                      </span>
-                    </td>
-                    <td className="border p-4 text-center">
-                      <span className="inline-flex items-center gap-2 text-yellow-600">
-                        <AlertTriangle className="h-4 w-4" /> $20+/month
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <ComparisonTable />
           </div>
         </section>
+        </SectionTracker>
 
         {/* How It Works */}
-        <section id="how-it-works" className="border-y bg-card py-24">
-          <div className="container mx-auto px-4">
+        <SectionTracker sectionId="how-it-works">
+          <section id="how-it-works" className="border-y bg-card py-24">
+            <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">
                 How It Works
@@ -468,17 +371,21 @@ export default function Home() {
             </div>
 
             <div className="mt-16 text-center">
-              <Link href="#how-it-works">
-                <Button size="lg" variant="outline">
-                  Watch 2-Minute Demo
-                </Button>
-              </Link>
+              <TrackedCTA location="how-it-works" variant="demo">
+                <Link href="#how-it-works">
+                  <Button size="lg" variant="outline">
+                    Watch 2-Minute Demo
+                  </Button>
+                </Link>
+              </TrackedCTA>
             </div>
           </div>
         </section>
+        </SectionTracker>
 
         {/* Testimonials Section */}
-        <section className="py-24">
+        <SectionTracker sectionId="testimonials">
+          <section className="py-24">
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">
@@ -545,9 +452,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </SectionTracker>
 
         {/* FAQ Section */}
-        <section id="faq" className="border-y bg-card py-24">
+        <SectionTracker sectionId="faq">
+          <section id="faq" className="border-y bg-card py-24">
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">
@@ -559,37 +468,18 @@ export default function Home() {
             </div>
 
             <div className="mx-auto mt-12 max-w-3xl">
-              <Accordion type="single" collapsible className="w-full">
-                {faqItems.map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="text-left">
-                      {item.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {item.answer}
-                      {item.question.includes("cost") && (
-                        <Link href="/pricing" className="ml-1 text-primary hover:underline">
-                          See pricing page
-                        </Link>
-                      )}
-                      {item.question.includes("private") && (
-                        <Link href="/privacy" className="ml-1 text-primary hover:underline">
-                          Read our privacy policy
-                        </Link>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+              <TrackedFAQAccordion items={faqItems} />
             </div>
           </div>
         </section>
+        </SectionTracker>
 
         {/* Pricing Preview */}
         <PricingSection />
 
         {/* Final CTA */}
-        <section className="border-t bg-card py-24">
+        <SectionTracker sectionId="final-cta">
+          <section className="border-t bg-card py-24">
           <div className="container mx-auto px-4 text-center">
             <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
               Start Building Your Story World
@@ -599,12 +489,14 @@ export default function Home() {
               Cancel anytime (though we hope you won&apos;t!).
             </p>
             <div className="mt-10">
-              <Link href="/signup">
-                <Button size="lg" className="h-14 px-10 text-base shadow-lg">
-                  Start Free Trial
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <TrackedCTA location="final-cta" variant="primary">
+                <Link href="/signup">
+                  <Button size="lg" className="h-14 px-10 text-base shadow-lg">
+                    Start Free Trial
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </TrackedCTA>
               <p className="mt-3 text-sm text-muted-foreground">
                 Takes 2 minutes to sign up
               </p>
@@ -629,6 +521,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+        </SectionTracker>
       </main>
 
       <Footer />

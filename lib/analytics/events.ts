@@ -68,4 +68,71 @@ export const trackEvent = {
       edges: edgeCount,
     });
   },
+
+  // ============================================================
+  // Marketing / Conversion Events
+  // ============================================================
+
+  /**
+   * Track CTA button clicks on marketing pages
+   */
+  ctaClicked: (location: string, variant: string) => {
+    track("cta_clicked", { location, variant });
+  },
+
+  /**
+   * Track navigation link clicks
+   */
+  navClicked: (destination: string, source: string) => {
+    track("nav_clicked", { destination, source });
+  },
+
+  /**
+   * Track FAQ accordion opens
+   */
+  faqOpened: (question: string) => {
+    track("faq_opened", { question });
+  },
+
+  /**
+   * Track section visibility (scroll depth)
+   */
+  sectionViewed: (section: string) => {
+    track("section_viewed", { section });
+  },
+
+  /**
+   * Track pricing plan hover/interaction
+   */
+  pricingViewed: (plan: string) => {
+    track("pricing_viewed", { plan });
+  },
+
+  /**
+   * Track feature comparison table interaction
+   */
+  comparisonViewed: () => {
+    track("comparison_viewed");
+  },
+
+  /**
+   * Track demo video play
+   */
+  demoPlayed: () => {
+    track("demo_played");
+  },
+
+  /**
+   * Track signup form started (user began typing)
+   */
+  signupStarted: (source: string) => {
+    track("signup_started", { source });
+  },
+
+  /**
+   * Track signup completed
+   */
+  signupCompleted: (method: "email" | "google") => {
+    track("signup_completed", { method });
+  },
 };
