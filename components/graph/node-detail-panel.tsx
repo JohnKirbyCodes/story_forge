@@ -28,7 +28,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Save, Trash2, Loader2 } from "lucide-react";
+import { Save, Trash2, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { NodeAttributeEditor } from "./node-attribute-editor";
 import { NODE_ATTRIBUTES } from "@/lib/story-universe-schema";
 
@@ -52,6 +53,7 @@ export function NodeDetailPanel({
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEnriching, setIsEnriching] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -106,6 +108,63 @@ export function NodeDetailPanel({
       console.error("Error deleting node:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleEnrich = async () => {
+    setIsEnriching(true);
+
+    try {
+      // Get user session for auth
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Please sign in to generate content");
+        return;
+      }
+
+      // Call Supabase Edge Function
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/enrich-nodes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          projectId,
+          nodeIds: [node.id],
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.error === "provider_error") {
+          toast.error(data.message, {
+            description: "Go to Settings -> AI to configure your API key.",
+            action: {
+              label: "Go to Settings",
+              onClick: () => router.push("/dashboard/settings/ai"),
+            },
+          });
+          return;
+        }
+        throw new Error(data.message || data.error || "Failed to enrich node");
+      }
+
+      toast.success("Node enriched with AI-generated details!", { duration: 5000 });
+
+      // Refresh to show updated data
+      router.refresh();
+      onClose();
+    } catch (error) {
+      console.error("Enrichment error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to enrich node",
+        { duration: 5000 }
+      );
+    } finally {
+      setIsEnriching(false);
     }
   };
 
@@ -214,7 +273,7 @@ export function NodeDetailPanel({
         <div className="flex items-center justify-between border-t pt-4 mt-4 px-4 pb-6">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
+              <Button variant="destructive" size="sm" disabled={isEnriching}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>
@@ -242,14 +301,29 @@ export function NodeDetailPanel({
             </AlertDialogContent>
           </AlertDialog>
 
-          <Button onClick={handleSave} disabled={isSaving || !name}>
-            {isSaving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
-            )}
-            Save Changes
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleEnrich}
+              disabled={isEnriching || isSaving}
+            >
+              {isEnriching ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-2 h-4 w-4" />
+              )}
+              Enrich
+            </Button>
+
+            <Button onClick={handleSave} disabled={isSaving || isEnriching || !name}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save
+            </Button>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
