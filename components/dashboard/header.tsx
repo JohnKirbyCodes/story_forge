@@ -98,7 +98,7 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => router.push("/dashboard/settings")}
+              onClick={() => router.push("/dashboard/settings/account")}
             >
               <Settings className="mr-2 h-4 w-4" />
               Settings

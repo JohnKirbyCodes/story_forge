@@ -59,6 +59,7 @@ export function ChapterGenerateDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [generationComplete, setGenerationComplete] = useState(false);
   const router = useRouter();
 
   const {
@@ -83,6 +84,7 @@ export function ChapterGenerateDialog({
       setIsGenerating(false);
       setCancelled(false);
       setCurrentIndex(0);
+      setGenerationComplete(false);
     }
   }, [open, scenes]);
 
@@ -157,6 +159,7 @@ export function ChapterGenerateDialog({
     setIsGenerating(true);
     setCancelled(false);
     setCurrentIndex(0);
+    setGenerationComplete(false);
 
     const toGenerate = scenes.filter((scene) => {
       if (skipExisting && (scene.edited_prose || scene.generated_prose)) {
@@ -206,7 +209,7 @@ export function ChapterGenerateDialog({
         scene.beat_instructions || ""
       );
 
-      // Update status based on result
+      // Update status based on result (also update hasExistingProse if successful)
       setSceneStatuses((prev) =>
         prev.map((s) =>
           s.sceneId === scene.id
@@ -214,6 +217,7 @@ export function ChapterGenerateDialog({
                 ...s,
                 status: result.success ? "completed" : "error",
                 error: result.error,
+                hasExistingProse: result.success ? true : s.hasExistingProse,
               }
             : s
         )
@@ -232,6 +236,7 @@ export function ChapterGenerateDialog({
 
     endBatchGeneration();
     setIsGenerating(false);
+    setGenerationComplete(true);
     router.refresh();
   };
 
@@ -363,6 +368,11 @@ export function ChapterGenerateDialog({
           {isGenerating ? (
             <Button variant="destructive" onClick={handleCancel}>
               Cancel
+            </Button>
+          ) : generationComplete ? (
+            <Button onClick={handleClose}>
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Done
             </Button>
           ) : (
             <>

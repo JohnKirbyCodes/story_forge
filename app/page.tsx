@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
 import { PricingSection } from "@/components/shared/pricing-section";
 import {
-  BookOpen,
   Network,
   Sparkles,
   Zap,
@@ -27,16 +26,16 @@ import {
 
 const faqItems = [
   {
-    question: "How is StoryForge different from ChatGPT?",
-    answer: "ChatGPT forgets your story between conversations. StoryForge learns your entire world and feeds that context into every suggestion. You get AI that knows your characters, your plot, your rules. ChatGPT starts from scratch each time."
+    question: "How is NovelWorld different from ChatGPT?",
+    answer: "ChatGPT forgets your story between conversations. NovelWorld learns your entire world and feeds that context into every suggestion. You get AI that knows your characters, your plot, your rules. ChatGPT starts from scratch each time."
   },
   {
-    question: "Can I use StoryForge for non-fiction?",
-    answer: "StoryForge is optimized for fiction and narrative storytelling. The knowledge graph works best when you have characters, locations, and relationships. For non-fiction, traditional tools like Google Docs work fine."
+    question: "Can I use NovelWorld for non-fiction?",
+    answer: "NovelWorld is optimized for fiction and narrative storytelling. The knowledge graph works best when you have characters, locations, and relationships. For non-fiction, traditional tools like Google Docs work fine."
   },
   {
-    question: "How much does StoryForge cost?",
-    answer: "StoryForge has a free tier with unlimited world-building and limited AI suggestions. Pro tier ($15/month) includes unlimited AI drafting and full revision tools. See our pricing page for details."
+    question: "How much does NovelWorld cost?",
+    answer: "NovelWorld has a free tier with unlimited world-building and limited AI suggestions. Pro tier ($15/month) includes unlimited AI drafting and full revision tools. See our pricing page for details."
   },
   {
     question: "Is my story private?",
@@ -44,11 +43,11 @@ const faqItems = [
   },
   {
     question: "Can I import my existing manuscript?",
-    answer: "Yes. StoryForge accepts .docx, .txt, and .md files. It analyzes your manuscript and automatically extracts characters, locations, and events to build your initial knowledge graph. You refine from there."
+    answer: "Yes. NovelWorld accepts .docx, .txt, and .md files. It analyzes your manuscript and automatically extracts characters, locations, and events to build your initial knowledge graph. You refine from there."
   },
   {
     question: "How does the AI avoid repetitive suggestions?",
-    answer: "StoryForge's AI learns from what you accept and reject. It remembers your style, preferences, and story rules. The more you use it, the more personalized it becomes. It's not one-size-fits-all."
+    answer: "NovelWorld's AI learns from what you accept and reject. It remembers your style, preferences, and story rules. The more you use it, the more personalized it becomes. It's not one-size-fits-all."
   },
   {
     question: "Can I collaborate with other writers?",
@@ -56,7 +55,7 @@ const faqItems = [
   },
   {
     question: "Is there a word limit?",
-    answer: "No. StoryForge handles manuscripts from short stories to 500K+ word epics. The knowledge graph scales. The AI context window adapts based on your plan."
+    answer: "No. NovelWorld handles manuscripts from short stories to 500K+ word epics. The knowledge graph scales. The AI context window adapts based on your plan."
   }
 ];
 
@@ -65,7 +64,7 @@ const faqSchema = {
   "@type": "FAQPage",
   "mainEntity": faqItems.map((item, index) => ({
     "@type": "Question",
-    "@id": `https://storyforge.ai/#faq-${index + 1}`,
+    "@id": `https://novelworld.ai/#faq-${index + 1}`,
     "name": item.question,
     "acceptedAnswer": {
       "@type": "Answer",
@@ -89,8 +88,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">StoryForge AI</span>
+            <span className="text-xl font-bold">NovelWorld</span>
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
             <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -127,7 +125,7 @@ export default function Home() {
                   Build Fictional Worlds with Intelligence
                 </h1>
                 <p className="mt-8 max-w-xl text-xl leading-relaxed text-muted-foreground">
-                  StoryForge&apos;s AI-powered knowledge graph helps you organize characters,
+                  NovelWorld&apos;s AI-powered knowledge graph helps you organize characters,
                   plot dependencies, and story structure in one intelligent workspace.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -162,7 +160,7 @@ export default function Home() {
                   <Network className="h-24 w-24 text-muted-foreground/30" />
                 </div>
                 <p className="mt-3 text-center text-sm text-muted-foreground">
-                  StoryForge knowledge graph showing character relationships and plot connections
+                  NovelWorld knowledge graph showing character relationships and plot connections
                 </p>
               </div>
             </div>
@@ -214,14 +212,14 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <p className="mb-4 text-sm font-medium uppercase tracking-wider text-primary">
-                The StoryForge Difference
+                The NovelWorld Difference
               </p>
               <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
                 Knowledge Graph Architecture
               </h2>
               <p className="mt-6 text-lg text-muted-foreground">
                 Instead of treating your story as a collection of loose documents,
-                StoryForge models your fictional world as an intelligent network where
+                NovelWorld models your fictional world as an intelligent network where
                 characters, locations, events, and ideas connect with meaning.
               </p>
             </div>
@@ -233,7 +231,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold">Intelligent World Building</h3>
                 <p className="mt-3 text-muted-foreground">
-                  Create characters, locations, events, and concepts. StoryForge learns
+                  Create characters, locations, events, and concepts. NovelWorld learns
                   the connections between them. When you edit a character&apos;s motivation,
                   AI suggests related plot opportunities automatically.
                 </p>
@@ -246,7 +244,7 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">Consistency Engine</h3>
                 <p className="mt-3 text-muted-foreground">
                   AI monitors your manuscript for inconsistencies in real-time. Character
-                  details, timeline conflicts, location descriptions—StoryForge catches
+                  details, timeline conflicts, location descriptions—NovelWorld catches
                   what your eyes miss and suggests fixes.
                 </p>
               </div>
@@ -269,7 +267,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold">Intelligent Drafting</h3>
                 <p className="mt-3 text-muted-foreground">
-                  When you write a scene, StoryForge feeds your story context to the AI.
+                  When you write a scene, NovelWorld feeds your story context to the AI.
                   Get scene suggestions that respect your world&apos;s rules, character
                   personalities, and plot trajectory.
                 </p>
@@ -282,7 +280,7 @@ export default function Home() {
                 <thead>
                   <tr className="bg-muted/50">
                     <th className="border p-4 text-left font-semibold">Feature</th>
-                    <th className="border p-4 text-center font-semibold">StoryForge</th>
+                    <th className="border p-4 text-center font-semibold">NovelWorld</th>
                     <th className="border p-4 text-center font-semibold">ChatGPT/Generic AI</th>
                     <th className="border p-4 text-center font-semibold">Other AI Writing Tools</th>
                   </tr>
@@ -392,7 +390,7 @@ export default function Home() {
                 How It Works
               </p>
               <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
-                How StoryForge Works
+                How NovelWorld Works
               </h2>
             </div>
 
@@ -404,7 +402,7 @@ export default function Home() {
                   <h3 className="text-2xl font-semibold">Build Your World</h3>
                   <p className="mt-4 text-muted-foreground">
                     Create characters with details that matter. Map locations. Plot events.
-                    Define factions and concepts. StoryForge organizes everything into a
+                    Define factions and concepts. NovelWorld organizes everything into a
                     living knowledge graph.
                   </p>
                 </div>
@@ -439,7 +437,7 @@ export default function Home() {
                   <div className="mb-4 text-6xl font-bold text-primary/20">3</div>
                   <h3 className="text-2xl font-semibold">Write with Intelligence</h3>
                   <p className="mt-4 text-muted-foreground">
-                    When you draft scenes, StoryForge feeds your world context to the AI.
+                    When you draft scenes, NovelWorld feeds your world context to the AI.
                     Get scene suggestions that respect your characters, locations, and plot.
                     Write faster with consistency.
                   </p>
@@ -488,7 +486,7 @@ export default function Home() {
                 Testimonials
               </p>
               <h2 className="font-serif text-4xl leading-tight sm:text-5xl">
-                Writers Love StoryForge
+                Writers Love NovelWorld
               </h2>
             </div>
 
@@ -503,14 +501,14 @@ export default function Home() {
                 <div className="mt-6">
                   <p className="font-semibold">Sarah Chen</p>
                   <p className="text-sm text-muted-foreground">Fiction Writer, 50K+ Discord community</p>
-                  <p className="mt-2 text-xs text-muted-foreground">Completed 2 novels with StoryForge</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Completed 2 novels with NovelWorld</p>
                 </div>
               </div>
 
               <div className="rounded-xl border bg-card p-6">
                 <Quote className="h-8 w-8 text-primary/30" />
                 <blockquote className="mt-4 text-muted-foreground">
-                  &quot;Before StoryForge, I kept track of character details in my head.
+                  &quot;Before NovelWorld, I kept track of character details in my head.
                   That doesn&apos;t scale. Now I can write longer, more complex stories
                   without losing threads. Game changer.&quot;
                 </blockquote>
@@ -525,7 +523,7 @@ export default function Home() {
                 <Quote className="h-8 w-8 text-primary/30" />
                 <blockquote className="mt-4 text-muted-foreground">
                   &quot;The consistency checking saved me from a massive timeline error
-                  in my manuscript. Readers would have caught it. StoryForge caught it first.&quot;
+                  in my manuscript. Readers would have caught it. NovelWorld caught it first.&quot;
                 </blockquote>
                 <div className="mt-6">
                   <p className="font-semibold">Dr. Emma Roberts</p>
