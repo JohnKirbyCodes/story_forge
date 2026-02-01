@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,9 +9,8 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           {/* Logo and copyright */}
           <div className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              &copy; {currentYear} StoryForge AI
+              &copy; {currentYear} NovelWorld
             </span>
           </div>
 
@@ -23,6 +21,12 @@ export function Footer() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Home
+            </Link>
+            <Link
+              href="/pricing"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Pricing
             </Link>
             <Link
               href="/contact"
