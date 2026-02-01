@@ -15,12 +15,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Loader2 } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +34,11 @@ export default function SignupPage() {
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!acceptedTerms) {
+      setError("You must accept the Terms of Service to create an account");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -50,6 +58,9 @@ export default function SignupPage() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/callback`,
+          data: {
+            marketing_opt_in: marketingOptIn,
+          },
         },
       });
 
@@ -221,6 +232,45 @@ export default function SignupPage() {
                 required
                 disabled={isLoading}
               />
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-sm leading-tight cursor-pointer"
+                >
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-primary hover:underline" target="_blank">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="text-primary hover:underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="marketing"
+                  checked={marketingOptIn}
+                  onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
+                  disabled={isLoading}
+                />
+                <label
+                  htmlFor="marketing"
+                  className="text-sm text-muted-foreground leading-tight cursor-pointer"
+                >
+                  Send me product updates and writing tips (optional)
+                </label>
+              </div>
             </div>
 
             {error && (
