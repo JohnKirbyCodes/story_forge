@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Sparkles, PenLine, Loader2, Check, AlertCircle } from "lucide-react";
 import { ModelSelector } from "@/components/shared/model-selector";
 import { AIProvider } from "@/lib/ai/providers/config";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface AddSynopsisCardProps {
   bookId: string;
@@ -83,6 +84,7 @@ export function AddSynopsisCard({
       const data = await response.json();
       setSynopsis(data.synopsis);
       setIsEditing(true);
+      trackEvent.synopsisGenerated(bookId);
     } catch (error) {
       console.error("Error generating synopsis:", error);
       setError("Failed to generate synopsis. Please try again.");

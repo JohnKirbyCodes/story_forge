@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Book } from "@/types/database";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,

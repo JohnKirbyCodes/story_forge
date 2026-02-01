@@ -38,6 +38,7 @@ import {
 import { ModelSelector } from "@/components/shared/model-selector";
 import { AIProvider } from "@/lib/ai/providers/config";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface GeneratedScene {
   title?: string;
@@ -127,6 +128,9 @@ export function GenerateOutlineDialog({
       const data = await response.json();
       setOutline(data);
       setStep("preview");
+      // Track outline generation
+      const totalScenes = data.chapters.reduce((acc: number, ch: GeneratedChapter) => acc + ch.scenes.length, 0);
+      trackEvent.outlineGenerated(bookId, data.chapters.length, totalScenes);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setStep("configure");

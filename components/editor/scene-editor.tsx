@@ -19,6 +19,7 @@ import { FloatingEditPreview } from "@/components/dashboard/edit-preview";
 import { EditAction } from "@/lib/ai/edit-prompts";
 import { ModelSelector } from "@/components/shared/model-selector";
 import { AIProvider } from "@/lib/ai/providers/config";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface SceneCharacterWithNode extends SceneCharacter {
   story_nodes?: StoryNode;
@@ -170,6 +171,9 @@ export function SceneEditor({
     onFinish: (_prompt, completionText) => {
       setProse(completionText);
       saveScene(beatInstructions, completionText);
+      // Track scene generation
+      const words = completionText.trim().split(/\s+/).filter(Boolean).length;
+      trackEvent.sceneGenerated(scene.id, words);
     },
     onError: (err) => {
       console.error("Generation error:", err);
@@ -274,8 +278,10 @@ export function SceneEditor({
     const newProse = prose.replace(editState.originalText, editCompletion);
     setProse(newProse);
     saveScene(beatInstructions, newProse);
+    // Track AI enhancement when edit is accepted
+    trackEvent.aiEnhancement(editState.action, scene.id);
     setEditState(null);
-  }, [editState, editCompletion, prose, beatInstructions, saveScene]);
+  }, [editState, editCompletion, prose, beatInstructions, saveScene, scene.id]);
 
   // Handle rejecting the edit
   const handleRejectEdit = useCallback(() => {

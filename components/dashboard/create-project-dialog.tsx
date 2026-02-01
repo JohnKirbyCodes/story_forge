@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/events";
 
 const genres = [
   "Fantasy",
@@ -78,6 +79,7 @@ export function CreateProjectDialog() {
       setTitle("");
       setDescription("");
       setGenre("");
+      trackEvent.projectCreated(genre);
       router.refresh();
       router.push(`/dashboard/projects/${data.id}`);
     } catch (err) {

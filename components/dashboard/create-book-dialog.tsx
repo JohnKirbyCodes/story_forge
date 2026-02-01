@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface CreateBookDialogProps {
   projectId: string;
@@ -68,6 +69,7 @@ export function CreateBookDialog({ projectId }: CreateBookDialogProps) {
       setSubtitle("");
       setSynopsis("");
       setTargetWordCount("");
+      trackEvent.bookCreated(projectId);
       router.refresh();
       router.push(`/dashboard/projects/${projectId}/books/${data.id}`);
     } catch (err) {

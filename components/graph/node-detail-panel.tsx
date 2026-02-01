@@ -32,6 +32,7 @@ import { Save, Trash2, Loader2, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 import { NodeAttributeEditor } from "./node-attribute-editor";
 import { NODE_ATTRIBUTES } from "@/lib/story-universe-schema";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface NodeDetailPanelProps {
   node: StoryNode;
@@ -176,6 +177,9 @@ export function NodeDetailPanel({
       // Show success state on button
       setEnrichSuccess(true);
       setTimeout(() => setEnrichSuccess(false), 2000);
+
+      // Track node enrichment
+      trackEvent.nodeEnriched(node.node_type);
 
       // Switch to attributes tab to show new data
       setActiveTab("attributes");

@@ -18,6 +18,7 @@ import { Loader2, Sparkles, Users, MapPin, Swords, Package, Calendar, Lightbulb,
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { conversionAnalytics } from "@/lib/analytics/conversion";
+import { trackEvent } from "@/lib/analytics/events";
 
 interface GenerateUniverseDialogProps {
   open: boolean;
@@ -170,6 +171,9 @@ export function GenerateUniverseDialog({
       toast.success(
         `Generated ${data.generated.characters} characters, ${data.generated.locations} locations, ${data.generated.factions} factions, and ${data.generated.relationships} relationships!`
       );
+
+      // Track universe generation
+      trackEvent.universeGenerated(projectId, data.nodes, data.edges);
 
       onOpenChange(false);
       router.refresh();
