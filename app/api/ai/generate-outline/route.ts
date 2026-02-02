@@ -6,6 +6,7 @@ import { trackAIUsage, extractUsageFromResult } from "@/lib/ai/usage-tracker";
 import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
 import { isValidModel } from "@/lib/ai/providers/config";
 import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 120;
 
@@ -280,22 +281,22 @@ These references will be used to automatically link story elements to scenes.
 
 Create a compelling narrative arc that fits the synopsis and uses the established story elements.`;
 
-    console.log("\n========== AI OUTLINE GENERATION ==========");
-    console.log("Book:", book.title);
-    console.log("Provider:", provider);
-    console.log("Model:", modelId);
-    console.log("Chapters requested:", chapterCount || "10-15");
-    console.log("Scenes per chapter:", scenesPerChapter || "2-4");
-    console.log("Story Nodes:", {
-      characters: characters.length,
-      locations: locations.length,
-      factions: factions.length,
-      events: events.length,
-      items: items.length,
-      concepts: concepts.length,
+    logger.debug("AI outline generation started", {
+      book: book.title,
+      provider,
+      model: modelId,
+      chaptersRequested: chapterCount || "10-15",
+      scenesPerChapter: scenesPerChapter || "2-4",
+      storyNodes: {
+        characters: characters.length,
+        locations: locations.length,
+        factions: factions.length,
+        events: events.length,
+        items: items.length,
+        concepts: concepts.length,
+      },
+      relationships: storyEdges?.length || 0,
     });
-    console.log("Relationships:", storyEdges?.length || 0);
-    console.log("============================================\n");
 
     const startTime = Date.now();
 
@@ -322,7 +323,14 @@ Create a compelling narrative arc that fits the synopsis and uses the establishe
       status: "success",
     });
 
-    console.log(`AI Usage: ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
+    logger.aiUsage({
+      provider,
+      model: modelId,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      endpoint: "generate-outline",
+    });
 
     // Build node name-to-ID mapping for the frontend to link scenes to nodes
     const nodeMapping: Record<string, { id: string; type: string }> = {};
@@ -341,7 +349,7 @@ Create a compelling narrative arc that fits the synopsis and uses the establishe
       nodeMapping,
     });
   } catch (error) {
-    console.error("Error generating outline:", error);
+    logger.error("Error generating outline", error as Error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

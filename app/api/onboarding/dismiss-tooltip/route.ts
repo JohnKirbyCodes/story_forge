@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 interface DismissTooltipRequest {
   tooltipId: string;
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
       .single();
 
     if (fetchError) {
-      console.error("Error fetching profile:", fetchError);
+      logger.error("Error fetching profile", fetchError as Error);
       return NextResponse.json(
         { error: "Failed to fetch profile" },
         { status: 500 }
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
       .eq("id", user.id);
 
     if (updateError) {
-      console.error("Error dismissing tooltip:", updateError);
+      logger.error("Error dismissing tooltip", updateError as Error);
       return NextResponse.json(
         { error: "Failed to dismiss tooltip" },
         { status: 500 }
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
       tooltips_dismissed: updatedDismissed,
     });
   } catch (error) {
-    console.error("Error in dismiss tooltip:", error);
+    logger.error("Error in dismiss tooltip", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }

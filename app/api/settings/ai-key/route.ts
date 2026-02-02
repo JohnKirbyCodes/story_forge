@@ -10,6 +10,7 @@ import {
 } from "@/lib/ai/providers/config";
 import { saveAiKeySchema, validateRequest } from "@/lib/validation/schemas";
 import { logger } from "@/lib/logger";
+import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
 
 async function validateApiKey(
   provider: AIProvider,
@@ -71,6 +72,15 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit API key validation to prevent API reconnaissance attacks
+    const { rateLimited } = await checkApiRateLimit(RATE_LIMIT_IDS.AI_KEY_VALIDATION, {
+      request,
+      rateLimitKey: user.id,
+    });
+    if (rateLimited) {
+      return createRateLimitResponse();
     }
 
     const body = await request.json();

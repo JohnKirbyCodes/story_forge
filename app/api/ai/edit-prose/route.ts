@@ -14,6 +14,7 @@ import { GraphContext } from "@/types/graph-context";
 import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
 import { isValidModel } from "@/lib/ai/providers/config";
 import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
 
@@ -156,23 +157,20 @@ export async function POST(request: Request) {
 
     const userPrompt = getEditPrompt(action, selectedText, customPrompt);
 
-    // Log for debugging
-    console.log("\n========== AI EDIT REQUEST ==========");
-    console.log("Action:", action);
-    console.log("Provider:", provider);
-    console.log("Model:", modelId);
-    console.log("Scene ID:", sceneId);
-    console.log("Text length:", selectedText.length, "characters");
-    console.log("Using graph context:", !!graphContext);
-    if (graphContext) {
-      console.log("  Characters:", graphContext.nodes.filter(n => n.type === "character").length);
-      console.log("  Locations:", graphContext.nodes.filter(n => n.type === "location").length);
-      console.log("  Relationships:", graphContext.relationships.length);
-    }
-    if (customPrompt) {
-      console.log("Custom prompt:", customPrompt);
-    }
-    console.log("==========================================\n");
+    logger.debug("AI edit request started", {
+      action,
+      provider,
+      model: modelId,
+      sceneId,
+      textLength: selectedText.length,
+      usingGraphContext: !!graphContext,
+      ...(graphContext && {
+        characters: graphContext.nodes.filter(n => n.type === "character").length,
+        locations: graphContext.nodes.filter(n => n.type === "location").length,
+        relationships: graphContext.relationships.length,
+      }),
+      ...(customPrompt && { hasCustomPrompt: true }),
+    });
 
     const startTime = Date.now();
 
@@ -200,13 +198,20 @@ export async function POST(request: Request) {
           status: "success",
         });
 
-        console.log(`AI Usage (${action}): ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
+        logger.aiUsage({
+          provider,
+          model: modelId,
+          inputTokens,
+          outputTokens,
+          durationMs,
+          endpoint: `edit-prose:${action}`,
+        });
       },
     });
 
     return result.toTextStreamResponse();
   } catch (error) {
-    console.error("Error editing prose:", error);
+    logger.error("Error editing prose", error as Error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

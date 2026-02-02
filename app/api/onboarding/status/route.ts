@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export interface OnboardingStatus {
   onboarding_completed: boolean;
@@ -41,7 +42,7 @@ export async function GET() {
       .single();
 
     if (error) {
-      console.error("Error fetching onboarding status:", error);
+      logger.error("Error fetching onboarding status", error as Error);
       return NextResponse.json(
         { error: "Failed to fetch onboarding status" },
         { status: 500 }
@@ -68,7 +69,7 @@ export async function GET() {
 
     return NextResponse.json(status);
   } catch (error) {
-    console.error("Error in onboarding status:", error);
+    logger.error("Error in onboarding status", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }

@@ -7,6 +7,7 @@ import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider
 import { isValidModel } from "@/lib/ai/providers/config";
 import { RELATIONSHIP_TYPES, CHARACTER_ROLES } from "@/lib/story-universe-schema";
 import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 180; // 3 minutes for complex generation
 
@@ -291,19 +292,19 @@ Create meaningful relationships between the generated elements. Focus on:
 - Character-to-location connections (lives_in, born_in, works_at)
 - Faction-to-faction dynamics (allies, rivals, at_war_with)`;
 
-    console.log("\n========== AI UNIVERSE GENERATION ==========");
-    console.log("Project:", project.title);
-    console.log("Provider:", provider);
-    console.log("Model:", modelId);
-    console.log("Requested counts:", {
-      characters: characterCount,
-      locations: locationCount,
-      factions: factionCount,
-      items: itemCount,
-      events: eventCount,
-      concepts: conceptCount,
+    logger.debug("AI universe generation started", {
+      project: project.title,
+      provider,
+      model: modelId,
+      requestedCounts: {
+        characters: characterCount,
+        locations: locationCount,
+        factions: factionCount,
+        items: itemCount,
+        events: eventCount,
+        concepts: conceptCount,
+      },
     });
-    console.log("============================================\n");
 
     const startTime = Date.now();
 
@@ -316,13 +317,15 @@ Create meaningful relationships between the generated elements. Focus on:
         prompt: `Generate a complete story universe for "${project.title}". Create compelling, interconnected elements that support the genre, themes, and setting. Ensure characters have clear roles, locations are vivid, and relationships create potential for conflict and drama.`,
       });
     } catch (genError) {
-      console.error("generateObject error:", genError);
+      logger.error("generateObject error", genError as Error);
       throw genError;
     }
 
     const durationMs = Date.now() - startTime;
-    console.log("generateObject result type:", typeof result);
-    console.log("generateObject has object:", !!result?.object);
+    logger.debug("generateObject completed", {
+      resultType: typeof result,
+      hasObject: !!result?.object,
+    });
     const { inputTokens, outputTokens } = extractUsageFromResult(result);
 
     // Track AI usage
@@ -337,20 +340,28 @@ Create meaningful relationships between the generated elements. Focus on:
       status: "success",
     });
 
-    console.log(`AI Usage: ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
+    logger.aiUsage({
+      provider,
+      model: modelId,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      endpoint: "generate-universe",
+    });
 
     const generated = result.object;
 
-    // Debug: log what was generated
-    console.log("Generated object keys:", Object.keys(generated || {}));
-    console.log("Generated counts:", {
-      characters: generated?.characters?.length || 0,
-      locations: generated?.locations?.length || 0,
-      factions: generated?.factions?.length || 0,
-      items: generated?.items?.length || 0,
-      events: generated?.events?.length || 0,
-      concepts: generated?.concepts?.length || 0,
-      relationships: generated?.relationships?.length || 0,
+    logger.debug("Generated universe", {
+      keys: Object.keys(generated || {}),
+      counts: {
+        characters: generated?.characters?.length || 0,
+        locations: generated?.locations?.length || 0,
+        factions: generated?.factions?.length || 0,
+        items: generated?.items?.length || 0,
+        events: generated?.events?.length || 0,
+        concepts: generated?.concepts?.length || 0,
+        relationships: generated?.relationships?.length || 0,
+      },
     });
 
     // Calculate positions for all nodes
@@ -544,7 +555,7 @@ Create meaningful relationships between the generated elements. Focus on:
       }
     }
 
-    console.log(`Inserted ${insertedNodes.length} nodes and ${insertedEdges} edges`);
+    logger.debug("Inserted universe elements", { nodes: insertedNodes.length, edges: insertedEdges });
 
     return Response.json({
       success: true,
@@ -561,7 +572,7 @@ Create meaningful relationships between the generated elements. Focus on:
       },
     });
   } catch (error) {
-    console.error("Error generating universe:", error);
+    logger.error("Error generating universe", error as Error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 import { BillingCycle } from "@/lib/subscription/config";
 import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
       : process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID;
 
     if (!priceId) {
-      console.error("Missing Stripe price ID for billing cycle:", billingCycle);
+      logger.error("Missing Stripe price ID for billing cycle", undefined, { billingCycle });
       return NextResponse.json(
         { error: `Stripe price not configured for ${billingCycle} billing` },
         { status: 500 }
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ url: session.url });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
+    logger.error("Error creating checkout session", error as Error);
     const message = error instanceof Error ? error.message : "Failed to create checkout session";
     return NextResponse.json(
       { error: message },

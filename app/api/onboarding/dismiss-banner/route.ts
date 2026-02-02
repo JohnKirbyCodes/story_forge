@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -21,7 +22,7 @@ export async function POST() {
       .eq("id", user.id);
 
     if (error) {
-      console.error("Error dismissing banner:", error);
+      logger.error("Error dismissing banner", error as Error);
       return NextResponse.json(
         { error: "Failed to dismiss banner" },
         { status: 500 }
@@ -30,7 +31,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error in dismiss banner:", error);
+    logger.error("Error in dismiss banner", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }

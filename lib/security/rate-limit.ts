@@ -22,6 +22,7 @@
  * │ stripe-webhook          │ 100            │ 60s            │ High     │
  * │ ai-generate             │ 10             │ 60s            │ High     │
  * │ ai-generate-hourly      │ 50             │ 3600s (1hr)    │ High     │
+ * │ ai-key-validation       │ 5              │ 60s            │ High     │
  * │ content-write           │ 60             │ 60s            │ Medium   │
  * │ content-read            │ 120            │ 60s            │ Medium   │
  * │ export-operations       │ 5              │ 3600s (1hr)    │ Medium   │
@@ -53,6 +54,9 @@ export const RATE_LIMIT_IDS = {
   // AI Generation (High - prevent cost abuse)
   AI_GENERATE: "ai-generate",
   AI_GENERATE_HOURLY: "ai-generate-hourly",
+
+  // API Key Validation (High - prevent API reconnaissance)
+  AI_KEY_VALIDATION: "ai-key-validation",
 
   // Content Operations (Medium - prevent spam/scraping)
   CONTENT_WRITE: "content-write",

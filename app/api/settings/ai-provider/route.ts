@@ -7,6 +7,7 @@ import {
   getProviderForModel,
   AIProvider,
 } from "@/lib/ai/providers/config";
+import { logger } from "@/lib/logger";
 
 // Valid task types for task-specific model settings
 const VALID_TASK_TYPES = ["outline", "synopsis", "scene", "edit", "universe"] as const;
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No updates provided" }, { status: 400 });
     }
 
-    console.log("Updating profile with:", updateData);
+    logger.debug("Updating AI provider profile", { updateData });
 
     const { error } = await adminSupabase
       .from("profiles")
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
       .eq("id", user.id);
 
     if (error) {
-      console.error("Database error:", error);
+      logger.error("Database error updating AI provider", error as Error);
       return NextResponse.json(
         { error: `Database error: ${error.message}` },
         { status: 500 }
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating provider:", error);
+    logger.error("Error updating provider", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update provider" },
       { status: 500 }

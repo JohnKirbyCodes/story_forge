@@ -5,6 +5,7 @@ import { trackAIUsage, extractUsageFromResult } from "@/lib/ai/usage-tracker";
 import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
 import { isValidModel } from "@/lib/ai/providers/config";
 import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
 
@@ -212,14 +213,14 @@ ${contextStr}
 
 Write the synopsis in a professional, engaging style suitable for a book description. Do not include any preamble, headers, or meta-commentary - just write the synopsis text directly.`;
 
-    console.log("\n========== AI SYNOPSIS GENERATION ==========");
-    console.log("Book:", book.title);
-    console.log("Provider:", provider);
-    console.log("Model:", modelId);
-    console.log("Characters:", characters.length);
-    console.log("Locations:", locations.length);
-    console.log("Relationships:", storyEdges?.length || 0);
-    console.log("============================================\n");
+    logger.debug("AI synopsis generation started", {
+      book: book.title,
+      provider,
+      model: modelId,
+      characters: characters.length,
+      locations: locations.length,
+      relationships: storyEdges?.length || 0,
+    });
 
     const startTime = Date.now();
 
@@ -248,11 +249,18 @@ Write the synopsis in a professional, engaging style suitable for a book descrip
       status: "success",
     });
 
-    console.log(`AI Usage: ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
+    logger.aiUsage({
+      provider,
+      model: modelId,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      endpoint: "generate-synopsis",
+    });
 
     return Response.json({ synopsis });
   } catch (error) {
-    console.error("Error generating synopsis:", error);
+    logger.error("Error generating synopsis", error as Error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

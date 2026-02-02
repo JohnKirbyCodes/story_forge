@@ -297,13 +297,19 @@ export default function SignupPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex flex-col items-center gap-2">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline">
               Sign in
             </Link>
           </p>
+          <Link
+            href="/forgot-password"
+            className="text-sm text-muted-foreground hover:text-primary hover:underline"
+          >
+            Forgot your password?
+          </Link>
         </CardFooter>
       </Card>
     </div>

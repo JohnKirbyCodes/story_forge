@@ -5,6 +5,7 @@ import { trackAIUsage, extractUsageFromResult } from "@/lib/ai/usage-tracker";
 import { getUserProvider, ProviderError } from "@/lib/ai/providers/user-provider";
 import { isValidModel } from "@/lib/ai/providers/config";
 import { checkMultipleRateLimits, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export const maxDuration = 60;
 
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
       .order("sort_order", { ascending: true });
 
     if (prevBooksError) {
-      console.error("Error fetching previous books:", prevBooksError);
+      logger.error("Error fetching previous books", prevBooksError as Error);
       return new Response("Failed to fetch previous books", { status: 500 });
     }
 
@@ -208,12 +209,12 @@ ${contextStr}
 
 Write the recap as if introducing Book ${(currentBook.sort_order ?? 0) + 1} to someone who read the previous book(s) a while ago and needs a refresher. Do not include any preamble, headers, or meta-commentary - just write the recap text directly.`;
 
-    console.log("\n========== AI RECAP GENERATION ==========");
-    console.log("Current Book:", currentBook.title);
-    console.log("Previous Books:", previousBooks.length);
-    console.log("Provider:", provider);
-    console.log("Model:", modelId);
-    console.log("==========================================\n");
+    logger.debug("AI recap generation started", {
+      currentBook: currentBook.title,
+      previousBooksCount: previousBooks.length,
+      provider,
+      model: modelId,
+    });
 
     const startTime = Date.now();
 
@@ -242,7 +243,14 @@ Write the recap as if introducing Book ${(currentBook.sort_order ?? 0) + 1} to s
       status: "success",
     });
 
-    console.log(`AI Usage: ${inputTokens} input, ${outputTokens} output tokens in ${durationMs}ms`);
+    logger.aiUsage({
+      provider,
+      model: modelId,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      endpoint: "generate-recap",
+    });
 
     // Optionally save the recap to the book
     // Note: previously_on column may not be in generated types yet
@@ -253,7 +261,7 @@ Write the recap as if introducing Book ${(currentBook.sort_order ?? 0) + 1} to s
         .eq("id", bookId);
 
       if (updateError) {
-        console.error("Error saving recap:", updateError);
+        logger.error("Error saving recap", updateError as Error);
         // Don't fail the request, just log the error
       }
     }
@@ -264,7 +272,7 @@ Write the recap as if introducing Book ${(currentBook.sort_order ?? 0) + 1} to s
       saved: save,
     });
   } catch (error) {
-    console.error("Error generating recap:", error);
+    logger.error("Error generating recap", error as Error);
 
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(

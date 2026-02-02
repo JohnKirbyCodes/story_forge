@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import type { OnboardingStep } from "@/lib/analytics/onboarding";
+import { logger } from "@/lib/logger";
 
 interface UpdateProgressRequest {
   step: OnboardingStep;
@@ -35,7 +36,7 @@ export async function PATCH(request: Request) {
       .eq("id", user.id);
 
     if (error) {
-      console.error("Error updating onboarding progress:", error);
+      logger.error("Error updating onboarding progress", error as Error);
       return NextResponse.json(
         { error: "Failed to update progress" },
         { status: 500 }
@@ -44,7 +45,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true, step });
   } catch (error) {
-    console.error("Error in onboarding progress:", error);
+    logger.error("Error in onboarding progress", error as Error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Internal server error" },
       { status: 500 }

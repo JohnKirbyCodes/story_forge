@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { checkBookLimit } from "@/lib/subscription/limits";
 import { checkApiRateLimit, createRateLimitResponse, RATE_LIMIT_IDS } from "@/lib/security/rate-limit";
+import { logger } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error("Error creating book:", error);
+      logger.error("Error creating book", error as Error);
       return NextResponse.json(
         { error: "Failed to create book" },
         { status: 500 }
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in book creation:", error);
+    logger.error("Error in book creation", error as Error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
