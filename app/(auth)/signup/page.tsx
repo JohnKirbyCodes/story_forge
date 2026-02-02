@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Loader2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/events";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -30,6 +31,14 @@ export default function SignupPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const hasTrackedStart = useRef(false);
+
+  const trackSignupStarted = () => {
+    if (!hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      trackEvent.signupStarted("signup_page");
+    }
+  };
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +78,7 @@ export default function SignupPage() {
         return;
       }
 
+      trackEvent.signupCompleted("email");
       setSuccess(true);
     } catch {
       setError("An unexpected error occurred");
@@ -80,6 +90,7 @@ export default function SignupPage() {
   const handleGoogleSignup = async () => {
     setError(null);
     setIsGoogleLoading(true);
+    trackEvent.signupStarted("google_button");
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -205,6 +216,7 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={trackSignupStarted}
                 required
                 disabled={isLoading}
               />

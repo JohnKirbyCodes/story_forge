@@ -135,4 +135,18 @@ export const trackEvent = {
   signupCompleted: (method: "email" | "google") => {
     track("signup_completed", { method });
   },
+
+  /**
+   * Track login form started (user began typing)
+   */
+  loginStarted: (source: string) => {
+    track("login_started", { source });
+  },
+
+  /**
+   * Track login completed
+   */
+  loginCompleted: (method: "email" | "google") => {
+    track("login_completed", { method });
+  },
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BookOpen, Loader2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/events";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,6 +26,14 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const hasTrackedStart = useRef(false);
+
+  const trackLoginStarted = () => {
+    if (!hasTrackedStart.current) {
+      hasTrackedStart.current = true;
+      trackEvent.loginStarted("login_page");
+    }
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +51,7 @@ export default function LoginPage() {
         return;
       }
 
+      trackEvent.loginCompleted("email");
       router.push("/");
       router.refresh();
     } catch {
@@ -54,6 +64,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setError(null);
     setIsGoogleLoading(true);
+    trackEvent.loginStarted("google_button");
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -137,6 +148,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onFocus={trackLoginStarted}
                 required
                 disabled={isLoading}
               />
